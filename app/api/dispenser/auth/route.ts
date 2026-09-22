@@ -86,9 +86,10 @@ export async function POST(request: NextRequest) {
       }
     );
   } catch (error) {
-    console.error('Dispenser Auth Error:', error);
+    const errDetail = error instanceof Error ? error.message : String(error);
+    console.error('Dispenser Auth Error:', errDetail);
     return NextResponse.json(
-      { authorized: false, message: 'Internal server error during authorization' },
+      { authorized: false, message: 'Internal server error during authorization', error: errDetail },
       { status: 500 }
     );
   }
