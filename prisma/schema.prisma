@@ -1,0 +1,61 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum TransactionType {
+  DISPENSER_PURCHASE
+  ADMIN_RECHARGE
+  MANUAL_ADJUSTMENT
+}
+
+model Student {
+  id            String         @id @default(cuid())
+  cardUid       String         @unique @map("card_uid")
+  studentId     String         @unique @map("student_id")
+  name          String
+  department    String?
+  balance       Decimal        @default(0.00) @db.Decimal(10, 2)
+  status        AccountStatus  @default(ACTIVE)
+  transactions  Transaction[]
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  @@index([cardUid])
+  @@index([studentId])
+  @@map("students")
+}
+
+model Transaction {
+  id                String          @id @default(cuid())
+  studentId         String          @map("student_id")
+  student           Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  type              TransactionType @default(DISPENSER_PURCHASE)
+  weightTakenGrams  Decimal?        @map("weight_taken_grams") @db.Decimal(10, 2)
+  costPerGram       Decimal?        @map("cost_per_gram") @db.Decimal(10, 2)
+  amount            Decimal         @db.Decimal(10, 2) // Charged (-) or Credited (+)
+  postBalance       Decimal         @map("post_balance") @db.Decimal(10, 2)
+  createdAt         DateTime        @default(now()) @map("created_at")
+
+  @@index([studentId])
+  @@index([createdAt(sort: Desc)])
+  @@map("transactions")
+}
+
+model SystemConfig {
+  key         String   @id
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("system_configs")
+}
