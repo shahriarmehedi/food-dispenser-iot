@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
- * Smart Weight-Based Food Dispenser - ESP32 Firmware
+ * Smart Weight-Based Food Dispenser - ESP32 Firmware (Servo Motor Edition)
  * 
  * Hardware Modules:
  * 1. ESP32 Dev Module (WROOM-32)
  * 2. RC522 RFID Module (13.56 MHz SPI)
  * 3. HX711 24-Bit ADC + Load Cell Scale (Differential Weight Sensor)
- * 4. 5V Relay Module / Solenoid Lock (Lid Lock Actuator)
+ * 4. Servo Motor (SG90 / MG995 / MG996R) for Lid Unlock / Lock Mechanism
  * 5. Limit Switch / Magnetic Reed Switch (Lid Closed Detector)
  * 6. Active Buzzer / LED Indicator (Audio/Visual Feedback)
  * 7. (Optional) 0.96" I2C OLED SSD1306 (128x64)
@@ -27,6 +27,7 @@
 #include <SPI.h>
 #include <MFRC522.h>
 #include <HX711.h>
+#include <ESP32Servo.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
@@ -44,9 +45,13 @@
 #define HX711_SCK_PIN   4   // Clock pin
 
 // Actuators & Sensors
-#define RELAY_LOCK_PIN  2   // Relay signal pin to Solenoid Lock (Active LOW or HIGH depending on relay)
+#define SERVO_PIN       2   // PWM pin to Servo Motor signal wire (Orange/Yellow)
 #define LID_SWITCH_PIN  17  // Limit Switch / Reed Switch (INPUT_PULLUP: LOW = Closed, HIGH = Open)
 #define BUZZER_PIN      15  // Active Buzzer / Feedback Beeper
+
+// Servo Position Angles (Adjust to match your dispenser mechanical latch)
+const int SERVO_LOCKED_ANGLE   = 0;   // 0 degrees = Latch Locked
+const int SERVO_UNLOCKED_ANGLE = 90;  // 90 degrees = Latch Open
 
 // OLED Display (I2C)
 #define SCREEN_WIDTH    128
@@ -65,14 +70,15 @@ const char* SERVER_BASE   = "https://food-dispenser-iot.vercel.app";
 // 3. SCALE CALIBRATION CONSTANTS
 // -------------------------------------------------------------------------------------
 // Adjust CALIBRATION_FACTOR by putting a known weight (e.g. 100g) on your load cell.
-// Formula: calibration_factor = (raw_reading - zero_reading) / known_weight_in_grams
-float CALIBRATION_FACTOR = -420.0; // Typical starting value for 5kg load cell (tune as needed)
+// Use the companion calibrate_scale.ino sketch to find this value.
+float CALIBRATION_FACTOR = -420.0;
 
 // -------------------------------------------------------------------------------------
 // 4. INSTANCES & SYSTEM STATE
 // -------------------------------------------------------------------------------------
 MFRC522 rfid(SS_PIN, RST_PIN);
 HX711 scale;
+Servo dispenserServo;
 
 enum DispenserState {
   STATE_IDLE_WAIT_CARD,
@@ -104,13 +110,13 @@ void beep(int durationMs, int count = 1) {
 }
 
 void lockLid() {
-  digitalWrite(RELAY_LOCK_PIN, LOW); // Solenoid unpowered (LOCKED)
-  Serial.println("[ACTUATOR] Lid LOCKED");
+  dispenserServo.write(SERVO_LOCKED_ANGLE);
+  Serial.printf("[SERVO] Rotated to %d deg (LOCKED)\n", SERVO_LOCKED_ANGLE);
 }
 
 void unlockLid() {
-  digitalWrite(RELAY_LOCK_PIN, HIGH); // Solenoid energized (UNLOCKED)
-  Serial.println("[ACTUATOR] Lid UNLOCKED");
+  dispenserServo.write(SERVO_UNLOCKED_ANGLE);
+  Serial.printf("[SERVO] Rotated to %d deg (UNLOCKED)\n", SERVO_UNLOCKED_ANGLE);
 }
 
 bool isLidClosed() {
@@ -247,13 +253,20 @@ void setup() {
   Serial.begin(115200);
   delay(1000);
   Serial.println("\n\n=======================================================");
-  Serial.println("  Smart Food Dispenser IoT Client Initializing...");
+  Serial.println("  Smart Food Dispenser IoT Client Initializing (Servo)...");
   Serial.println("=======================================================");
 
   // Pin Modes
-  pinMode(RELAY_LOCK_PIN, OUTPUT);
   pinMode(BUZZER_PIN, OUTPUT);
   pinMode(LID_SWITCH_PIN, INPUT_PULLUP);
+
+  // Initialize Servo Motor
+  ESP32PWM::allocateTimer(0);
+  ESP32PWM::allocateTimer(1);
+  ESP32PWM::allocateTimer(2);
+  ESP32PWM::allocateTimer(3);
+  dispenserServo.setPeriodHertz(50); // Standard 50Hz servo
+  dispenserServo.attach(SERVO_PIN, 500, 2400); // Standard pulse width for SG90 / MG995
   lockLid();
 
   // Initialize I2C OLED Display
@@ -373,7 +386,7 @@ void loop() {
         }
         Serial.printf("[SCALE] Initial Weight Baseline: %.2f grams\n", initialWeightGrams);
 
-        // Unlock Lid Actuator
+        // Unlock Lid via Servo Motor
         unlockLid();
         dispenseStartTime = millis();
 
@@ -411,7 +424,7 @@ void loop() {
           Serial.println("[SENSOR] Lid closed by student.");
         }
 
-        // Lock lid immediately
+        // Lock lid immediately via Servo Motor
         lockLid();
         beep(150, 1);
 
@@ -428,7 +441,7 @@ void loop() {
     // STATE 4: WEIGHT DIFFERENTIAL CALCULATION
     // ---------------------------------------------------------
     case STATE_CALCULATING_WEIGHT: {
-      // Allow scale to settle for 600ms after lid lock vibration
+      // Allow scale to settle for 600ms after servo movement
       delay(600);
 
       float finalWeightGrams = 0.0;

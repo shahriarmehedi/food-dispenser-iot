@@ -26,7 +26,7 @@ Instead of manual cashiers or flat-rate buffet pricing:
  │                 ESP32 Microcontroller                  │
  │   - RC522 RFID Scanner (13.56 MHz SPI)                 │
  │   - HX711 24-bit ADC + Load Cell Scale                 │
- │   - Solenoid Door Lock / Servo Actuator                │
+ │   - Servo Motor (SG90/MG995/MG996R on GPIO 2)          │
  └──────────────────────────┬─────────────────────────────┘
                             │
                             │ HTTP POST (JSON / WiFi)
@@ -88,14 +88,14 @@ Instead of manual cashiers or flat-rate buffet pricing:
          "message": "Access granted"
        }
        ```
-5. **Hardware Action:** The ESP32 activates the solenoid lock (or servo motor) to unlock the dispenser lid and displays `"Welcome, Shahriar! Ready."` on the LCD.
+5. **Hardware Action:** The ESP32 rotates the **Servo Motor** on GPIO 2 to 90° (unlocked) to release the dispenser lid and displays `"Welcome, Shahriar! Ready."` on the LCD.
 
 ---
 
 ### Step 2: Food Dispensing & Scale Measurement
 1. Before the lid opens, the ESP32 records the initial weight reading: `initialWeight = readScale()`.
 2. The student opens the lid and scoops food into their container.
-3. The student closes the lid. A magnetic reed switch or limit switch triggers the lid lock.
+3. The student closes the lid. A limit switch triggers, and the ESP32 rotates the **Servo Motor** back to 0° (locked).
 4. After settling (~500ms), the ESP32 takes the final weight reading: `finalWeight = readScale()`.
 5. The differential weight taken is:
    $$\text{weightTakenGrams} = \text{initialWeight} - \text{finalWeight}$$

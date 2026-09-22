@@ -5,6 +5,8 @@ An end-to-end IoT Smart Food Dispenser and Cashless Canteen Management system bu
 * **Live Cloud Gateway & Dashboard:** [https://food-dispenser-iot.vercel.app](https://food-dispenser-iot.vercel.app)
 * **Default Admin Credentials:** Username: `admin` | Password: `admin123`
 * **Target Hardware Hotspot:** SSID: `iPhoneXS` | Password: `00000000`
+* 📖 **Hardware & Testing Guide:** [`HARDWARE_SETUP_AND_TEST_GUIDE.md`](./HARDWARE_SETUP_AND_TEST_GUIDE.md)
+* 📘 **System Architecture & Team Guide:** [`SYSTEM_ARCHITECTURE_AND_TEAM_GUIDE.md`](./SYSTEM_ARCHITECTURE_AND_TEAM_GUIDE.md)
 
 ---
 
@@ -34,7 +36,7 @@ An end-to-end IoT Smart Food Dispenser and Cashless Canteen Management system bu
 | **RC522 RFID** | **GND / 3.3V** | **GND / 3V3** | 3.3V | ⚠️ Do NOT connect to 5V |
 | **HX711 Scale** | **DOUT / DT** | **GPIO 16** | 3.3V / 5V | 24-bit Data Out |
 | **HX711 Scale** | **SCK / CLK** | **GPIO 4** | 3.3V / 5V | Clock pin |
-| **Relay Module** | **IN / Signal** | **GPIO 2** | 5V / 3.3V | Controls 12V Solenoid Lid Lock |
+| **Servo Motor** | **Signal (PWM)** | **GPIO 2** | 5V (VIN) | SG90 / MG995 / MG996R (0° locked, 90° unlocked) |
 | **Lid Switch** | **Pin 1 / Pin 2** | **GPIO 17 & GND** | - | Limit switch (`INPUT_PULLUP`: LOW = Closed) |
 | **Active Buzzer** | **(+) / (-)** | **GPIO 15 & GND** | 3.3V | Audio feedback chirps |
 | **OLED 0.96" (I2C)**| **SDA / SCL** | **GPIO 21 / 22** | 3.3V | Address `0x3C` (Optional) |
@@ -52,7 +54,7 @@ An end-to-end IoT Smart Food Dispenser and Cashless Canteen Management system bu
  [HX711 DOUT] ───────────────►│ GPIO 16              │
  [HX711 SCK]  ───────────────►│ GPIO 4               │
                               │                      │
- [RELAY / SOLENOID] ◄─────────│ GPIO 2               │
+ [SERVO MOTOR (PWM)] ◄────────│ GPIO 2               │
  [LID LIMIT SWITCH] ─────────►│ GPIO 17 (Pullup)     │
  [BUZZER] ◄───────────────────│ GPIO 15              │
  [OLED I2C SDA] ─────────────►│ GPIO 21              │
@@ -74,6 +76,7 @@ An end-to-end IoT Smart Food Dispenser and Cashless Canteen Management system bu
 
 ### 2. Install Required Libraries
 In Arduino IDE, open **Tools > Manage Libraries** (Ctrl+Shift+I) and install:
+* **ESP32Servo** (by Kevin Harrington / John K. Bennett) — *Required for servo motor PWM on ESP32*
 * **ArduinoJson** (by Benoit Blanchon, v6 or v7)
 * **MFRC522** (by GithubCommunity)
 * **HX711 Arduino Library** (by Bogdan Necula)
@@ -139,12 +142,12 @@ Follow this step-by-step test to verify everything from hardware to cloud:
 1. **Tap the RFID card:**
    * ESP32 beeps twice and prints:
      `[AUTH SUCCESS] Student: Shahriar Hossain | Balance: ৳250.00`
-   * The Solenoid Lock immediately **unlocks**.
+   * The **Servo Motor** rotates to 90° and immediately **unlocks** the lid.
    * LCD displays: `"Welcome, Shahriar! Lid Open!"`.
 2. **Dispense Food:**
    * Open the lid, scoop food (or lift a 100g test weight from the scale).
 3. **Close the Lid:**
-   * The limit switch triggers. The solenoid lock clicks **locked**.
+   * The limit switch triggers. The **Servo Motor** rotates back to 0° (**locked**).
    * The scale reads the weight difference: e.g. `100.0g`.
    * ESP32 sends `POST /api/dispenser/checkout`.
    * Cloud charges `100g * ৳0.50 = ৳50.00`.
