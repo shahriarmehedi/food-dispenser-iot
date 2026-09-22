@@ -6,6 +6,7 @@ An end-to-end IoT Smart Food Dispenser and Cashless Canteen Management system bu
 * **Default Admin Credentials:** Username: `admin` | Password: `admin123`
 * **Target Hardware Hotspot:** SSID: `iPhoneXS` | Password: `00000000`
 * 📖 **Hardware & Testing Guide:** [`HARDWARE_SETUP_AND_TEST_GUIDE.md`](./HARDWARE_SETUP_AND_TEST_GUIDE.md)
+* ⚡ **ESP32 Flashing & Wiring Manual:** [`ESP32_FLASHING_AND_WIRING_GUIDE.md`](./ESP32_FLASHING_AND_WIRING_GUIDE.md)
 * 📘 **System Architecture & Team Guide:** [`SYSTEM_ARCHITECTURE_AND_TEAM_GUIDE.md`](./SYSTEM_ARCHITECTURE_AND_TEAM_GUIDE.md)
 
 ---
