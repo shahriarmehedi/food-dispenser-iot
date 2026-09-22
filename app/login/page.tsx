@@ -118,11 +118,8 @@ export default function LoginPage() {
 
           <div className="mt-6 pt-5 border-t border-[#1b2235] text-center">
             <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#151b2a] border border-[#222a42] text-[11px] text-slate-400">
-              <Activity className="w-3 h-3 text-sky-400" />
-              <span>Default login:</span>
-              <code className="text-sky-300 font-mono">admin</code>
-              <span>/</span>
-              <code className="text-sky-300 font-mono">admin123</code>
+              <Shield className="w-3 h-3 text-sky-400" />
+              <span>Canteen Management Gateway &middot; Authorized Access Only</span>
             </div>
           </div>
         </div>

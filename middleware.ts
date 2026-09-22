@@ -5,11 +5,13 @@ import { COOKIE_NAME, verifySession } from '@/lib/auth';
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. Always permit public hardware and authentication routes
+  // 1. Always permit public hardware, manual/docs, and authentication routes
   if (
     pathname.startsWith('/api/dispenser') ||
     pathname.startsWith('/api/auth') ||
     pathname === '/login' ||
+    pathname === '/manual' ||
+    pathname.startsWith('/manual') ||
     pathname.startsWith('/_next') ||
     pathname.includes('.')
   ) {

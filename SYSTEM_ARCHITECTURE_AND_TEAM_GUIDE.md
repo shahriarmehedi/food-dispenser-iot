@@ -166,9 +166,9 @@ neondb -> schema: "food_dispenser"
 
 ### Access & Security
 * URL: `https://<your-domain>/login` (or `http://localhost:3000/login`)
-* Default credentials:
+* Admin Authentication:
   * **Username:** `admin`
-  * **Password:** `admin123` (configurable via `ADMIN_PASSWORD` in `.env` / Vercel).
+  * **Password:** Configured securely via `ADMIN_PASSWORD` in `.env` / Vercel Environment Variables.
 * Protected by HMAC-SHA256 encrypted cookies. The ESP32 M2M endpoints remain public and will never be blocked by authentication.
 
 ### Dashboard Pages

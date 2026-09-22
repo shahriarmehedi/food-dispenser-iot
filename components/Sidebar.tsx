@@ -10,6 +10,7 @@ import {
   Sliders,
   LogOut,
   Cpu,
+  BookOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -33,6 +34,11 @@ const navItems = [
     name: 'System Config',
     href: '/settings',
     icon: Sliders,
+  },
+  {
+    name: 'System Manual',
+    href: '/manual',
+    icon: BookOpen,
   },
 ];
 

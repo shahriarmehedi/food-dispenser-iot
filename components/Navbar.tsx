@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Wifi, Activity, Shield, Bell, Search, Sparkles } from 'lucide-react';
+import Link from 'next/link';
+import { Wifi, Activity, Shield, Bell, Search, Sparkles, BookOpen } from 'lucide-react';
 
 export default function Navbar() {
   return (
@@ -22,10 +23,13 @@ export default function Navbar() {
 
       {/* Right side controls */}
       <div className="flex items-center space-x-3">
-        <div className="hidden md:flex items-center space-x-2 text-xs text-slate-400 bg-[#151b2a] px-3 py-1.5 rounded-full border border-[#222a42]">
-          <Wifi className="w-3.5 h-3.5 text-sky-400" />
-          <span className="font-mono text-[11px]">LAN BIND: 0.0.0.0:3000</span>
-        </div>
+        <Link
+          href="/manual"
+          className="hidden sm:flex items-center space-x-2 text-xs text-sky-400 hover:text-sky-300 bg-[#151b2a] hover:bg-[#1b2235] px-3.5 py-1.5 rounded-full border border-sky-500/30 transition-smooth"
+        >
+          <BookOpen className="w-3.5 h-3.5 text-sky-400" />
+          <span className="font-medium">System Manual & Guides</span>
+        </Link>
 
         <div className="flex items-center space-x-2 pl-2">
           {/* Circular avatar with sky blue ring from reference */}

@@ -2,7 +2,7 @@
 ## Hardware Setup, Firmware Flashing & Live Testing Guide (Servo Motor Edition)
 
 > **Live Production Gateway:** [https://food-dispenser-iot.vercel.app](https://food-dispenser-iot.vercel.app)  
-> **Admin Dashboard Credentials:** Username: `admin` | Password: `admin123`  
+> **Admin Dashboard:** Username: `admin` (Password configured via `ADMIN_PASSWORD` env variable)  
 > **Target WiFi Hotspot:** SSID: `iPhoneXS` | Password: `00000000`  
 > **Actuator:** PWM Servo Motor (SG90 / MG995 / MG996R) on **GPIO 2**
 
@@ -194,9 +194,7 @@ Follow this complete walkthrough from student registration to food dispensing an
 
 ### Phase 1: Enroll a Test Student in the Live Web App
 1. On your phone or laptop, open: **[https://food-dispenser-iot.vercel.app/login](https://food-dispenser-iot.vercel.app/login)**
-2. Sign in with:
-   * **Username:** `admin`
-   * **Password:** `admin123`
+2. Sign in with username `admin` and your configured `ADMIN_PASSWORD`.
 3. Click on **Students** in the sidebar (or navigate to `/students`).
 4. Click the **+ Enroll New Student** button.
 5. Enter:

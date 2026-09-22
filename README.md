@@ -3,7 +3,7 @@
 An end-to-end IoT Smart Food Dispenser and Cashless Canteen Management system built with **Next.js 14 (App Router)**, **TypeScript**, **Prisma ORM (Neon PostgreSQL)**, **Tailwind CSS**, and **ESP32 Microcontroller Firmware**.
 
 * **Live Cloud Gateway & Dashboard:** [https://food-dispenser-iot.vercel.app](https://food-dispenser-iot.vercel.app)
-* **Default Admin Credentials:** Username: `admin` | Password: `admin123`
+* **Admin Access:** Username: `admin` (Password configured securely via `ADMIN_PASSWORD` environment variable)
 * **Target Hardware Hotspot:** SSID: `iPhoneXS` | Password: `00000000`
 * 📖 **Hardware & Testing Guide:** [`HARDWARE_SETUP_AND_TEST_GUIDE.md`](./HARDWARE_SETUP_AND_TEST_GUIDE.md)
 * ⚡ **ESP32 Flashing & Wiring Manual:** [`ESP32_FLASHING_AND_WIRING_GUIDE.md`](./ESP32_FLASHING_AND_WIRING_GUIDE.md)
@@ -117,7 +117,7 @@ Follow this step-by-step test to verify everything from hardware to cloud:
 
 ### Phase 1: Enroll a Test Student in the Dashboard
 1. Open **[https://food-dispenser-iot.vercel.app/login](https://food-dispenser-iot.vercel.app/login)**.
-2. Sign in with `admin` / `admin123`.
+2. Sign in with username `admin` and your configured password.
 3. Go to **Students Directory** (`/students`) $\to$ Click **Enroll New Student**.
 4. Enter:
    * **Full Name:** `Shahriar Mehedi`

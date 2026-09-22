@@ -12,9 +12,13 @@ import {
   RefreshCw,
   CreditCard,
   Building,
+  Edit,
+  Trash2,
 } from 'lucide-react';
 import { formatBDT } from '@/lib/utils';
 import AddStudentModal from '@/components/AddStudentModal';
+import EditStudentModal from '@/components/EditStudentModal';
+import DeleteStudentModal from '@/components/DeleteStudentModal';
 import RechargeModal from '@/components/RechargeModal';
 
 interface Student {
@@ -36,6 +40,8 @@ export default function StudentsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [rechargeTarget, setRechargeTarget] = useState<Student | null>(null);
+  const [editTarget, setEditTarget] = useState<Student | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Student | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const queryParams = new URLSearchParams();
@@ -203,15 +209,27 @@ export default function StudentsPage() {
                         </span>
                       </td>
                       <td className="px-5 py-3.5 text-right">
-                        <div className="flex items-center justify-end space-x-2">
+                        <div className="flex items-center justify-end space-x-1.5">
+                          {/* Top up button */}
                           <button
                             onClick={() => setRechargeTarget(student)}
-                            className="flex items-center space-x-1 px-3 py-1 rounded-full bg-[#151b2a] text-sky-400 hover:bg-[#1b2235] border border-[#222a42] text-[11px] font-medium transition-smooth"
+                            className="flex items-center space-x-1 px-2.5 py-1 rounded-full bg-[#151b2a] text-sky-400 hover:bg-[#1b2235] border border-[#222a42] text-[11px] font-medium transition-smooth"
+                            title="Top Up Balance"
                           >
                             <PlusCircle className="w-3 h-3 text-sky-400" />
                             <span>Top Up</span>
                           </button>
 
+                          {/* Edit button */}
+                          <button
+                            onClick={() => setEditTarget(student)}
+                            className="p-1.5 rounded-full bg-[#151b2a] text-slate-400 hover:text-sky-400 hover:bg-[#1b2235] border border-[#222a42] transition-smooth"
+                            title="Edit Student Profile"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </button>
+
+                          {/* Toggle Active / Suspended */}
                           <button
                             disabled={isUpdating}
                             onClick={() => handleToggleStatus(student)}
@@ -224,6 +242,15 @@ export default function StudentsPage() {
                               <ToggleLeft className="w-5 h-5 text-slate-600 hover:text-sky-400 transition-colors" />
                             )}
                           </button>
+
+                          {/* Delete button */}
+                          <button
+                            onClick={() => setDeleteTarget(student)}
+                            className="p-1.5 rounded-full bg-[#151b2a] text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 border border-[#222a42] hover:border-rose-500/30 transition-smooth"
+                            title="Delete Student"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -235,9 +262,24 @@ export default function StudentsPage() {
         </div>
       </div>
 
+      {/* Modals */}
       <AddStudentModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
+        onSuccess={() => mutate()}
+      />
+
+      <EditStudentModal
+        isOpen={!!editTarget}
+        student={editTarget}
+        onClose={() => setEditTarget(null)}
+        onSuccess={() => mutate()}
+      />
+
+      <DeleteStudentModal
+        isOpen={!!deleteTarget}
+        student={deleteTarget}
+        onClose={() => setDeleteTarget(null)}
         onSuccess={() => mutate()}
       />
 
