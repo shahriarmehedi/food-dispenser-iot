@@ -119,7 +119,7 @@ Follow this step-by-step test to verify everything from hardware to cloud:
 2. Sign in with `admin` / `admin123`.
 3. Go to **Students Directory** (`/students`) $\to$ Click **Enroll New Student**.
 4. Enter:
-   * **Full Name:** `Shahriar Hossain`
+   * **Full Name:** `Shahriar Mehedi`
    * **Student ID:** `2003001`
    * **Department:** `CSE`
    * **Card UID:** Your RFID card hex UID (e.g. `43A1B2C3` or tap card on NFC Tools mobile app to read).
@@ -141,7 +141,7 @@ Follow this step-by-step test to verify everything from hardware to cloud:
 ### Phase 3: The Dispensing Cycle
 1. **Tap the RFID card:**
    * ESP32 beeps twice and prints:
-     `[AUTH SUCCESS] Student: Shahriar Hossain | Balance: ৳250.00`
+     `[AUTH SUCCESS] Student: Shahriar Mehedi | Balance: ৳250.00`
    * The **Servo Motor** rotates to 90° and immediately **unlocks** the lid.
    * LCD displays: `"Welcome, Shahriar! Lid Open!"`.
 2. **Dispense Food:**
@@ -167,7 +167,7 @@ Follow this step-by-step test to verify everything from hardware to cloud:
   { "cardUid": "43A1B2C3" }
   ```
 * **Responses:**
-  * `200 OK`: `{ "authorized": true, "studentName": "Shahriar Hossain", "balance": 250.00, "message": "Access granted" }`
+  * `200 OK`: `{ "authorized": true, "studentName": "Shahriar Mehedi", "balance": 250.00, "message": "Access granted" }`
   * `403 Forbidden`: `{ "authorized": false, "balance": 8.50, "message": "Low balance" }` or `"Card suspended"`
   * `404 Not Found`: `{ "authorized": false, "message": "Card not registered" }`
 

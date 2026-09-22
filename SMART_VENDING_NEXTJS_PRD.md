@@ -308,7 +308,7 @@ async function main() {
     {
       cardUid: '43A1B2C3',
       studentId: '2003001',
-      name: 'Shahriar Hossain',
+      name: 'Shahriar Mehedi',
       department: 'CSE',
       balance: 350.00,
       status: AccountStatus.ACTIVE,

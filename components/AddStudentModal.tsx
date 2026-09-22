@@ -94,7 +94,7 @@ export default function AddStudentModal({ isOpen, onClose, onSuccess }: AddStude
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Shahriar Hossain"
+                placeholder="e.g. Shahriar Mehedi"
                 className="w-full bg-[#090c13] border border-[#1b2235] rounded-2xl pl-10 pr-3 py-2.5 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-sky-500 transition-colors"
               />
             </div>

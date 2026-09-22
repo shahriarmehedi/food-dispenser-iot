@@ -83,7 +83,7 @@ Instead of manual cashiers or flat-rate buffet pricing:
        ```json
        {
          "authorized": true,
-         "studentName": "Shahriar Hossain",
+         "studentName": "Shahriar Mehedi",
          "balance": 350.00,
          "message": "Access granted"
        }

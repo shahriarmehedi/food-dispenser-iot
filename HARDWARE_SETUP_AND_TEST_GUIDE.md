@@ -200,7 +200,7 @@ Follow this complete walkthrough from student registration to food dispensing an
 3. Click on **Students** in the sidebar (or navigate to `/students`).
 4. Click the **+ Enroll New Student** button.
 5. Enter:
-   * **Full Name:** `Shahriar Hossain`
+   * **Full Name:** `Shahriar Mehedi`
    * **Student ID:** `2003001`
    * **Department:** `Computer Science`
    * **RFID Card UID:** Enter the UID you found in Section 6 (e.g. `43A1B2C3`).
@@ -239,7 +239,7 @@ Follow this complete walkthrough from student registration to food dispensing an
    ```json
    {
      "authorized": true,
-     "studentName": "Shahriar Hossain",
+     "studentName": "Shahriar Mehedi",
      "balance": 250.00,
      "message": "Access granted"
    }
@@ -247,7 +247,7 @@ Follow this complete walkthrough from student registration to food dispensing an
 5. **Servo Action:** The Servo Motor rotates to **90° (unlocked)** with a mechanical click!
 6. OLED/Serial displays:
    ```text
-   [AUTH SUCCESS] Student: Shahriar Hossain | Balance: 250.00 BDT
+   [AUTH SUCCESS] Student: Shahriar Mehedi | Balance: 250.00 BDT
    [SERVO] Latch UNLOCKED (90 degrees).
    [STATE] State changed to: DISPENSING. Please open lid and take food.
    ```
@@ -302,7 +302,7 @@ Follow this complete walkthrough from student registration to food dispensing an
    * **Today's Revenue:** Increases by +৳50.00.
    * **Food Dispensed:** Increases by +100g (0.10kg).
    * **Successful Checkouts:** Increments by +1.
-   * **Live Stream Feed:** A new row pops into the top of the table with student `Shahriar Hossain`, `100.00g`, `৳50.00`, and time `Just now`.
+   * **Live Stream Feed:** A new row pops into the top of the table with student `Shahriar Mehedi`, `100.00g`, `৳50.00`, and time `Just now`.
    * **7-Day Telemetry Chart:** Dynamically rises to plot the new weight and revenue point.
 
 ---

@@ -17,7 +17,7 @@ async function runTests() {
     }
   }
 
-  // 1. Valid Auth Test (Shahriar Hossain, 43A1B2C3) - M2M without auth cookie
+  // 1. Valid Auth Test (Shahriar Mehedi, 43A1B2C3) - M2M without auth cookie
   await testCase('M2M Auth with valid active UID (43A1B2C3)', async () => {
     const t0 = performance.now();
     const res = await fetch(`${baseUrl}/api/dispenser/auth`, {
@@ -29,7 +29,7 @@ async function runTests() {
     const data = await res.json();
     if (res.status !== 200) throw new Error(`Status ${res.status}: ${JSON.stringify(data)}`);
     if (!data.authorized) throw new Error(`Expected authorized=true, got ${data.authorized}`);
-    if (data.studentName !== 'Shahriar Hossain') throw new Error(`Expected name Shahriar Hossain, got ${data.studentName}`);
+    if (data.studentName !== 'Shahriar Mehedi') throw new Error(`Expected name Shahriar Mehedi, got ${data.studentName}`);
     console.log(`(Latency: ${duration.toFixed(1)}ms, Balance: ৳${data.balance}) `);
   });
 
