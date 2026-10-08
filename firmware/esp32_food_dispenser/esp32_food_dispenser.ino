@@ -247,6 +247,24 @@ bool apiCheckoutFood(String cardUid, float weightTakenGrams, float &outCharged, 
 }
 
 // -------------------------------------------------------------------------------------
+// Helper to probe if HX711 hardware is actually connected
+bool isHX711Connected() {
+  pinMode(HX711_SCK_PIN, OUTPUT);
+  digitalWrite(HX711_SCK_PIN, LOW);
+  pinMode(HX711_DOUT_PIN, INPUT_PULLUP);
+
+  // When an HX711 is powered and connected, DOUT pulses LOW within ~150ms
+  unsigned long start = millis();
+  while (millis() - start < 250) {
+    if (digitalRead(HX711_DOUT_PIN) == LOW) {
+      return true;
+    }
+    delay(10);
+  }
+  return false;
+}
+
+// -------------------------------------------------------------------------------------
 // 7. SETUP
 // -------------------------------------------------------------------------------------
 void setup() {
@@ -301,22 +319,25 @@ void setup() {
   // Initialize RC522 RFID Scanner
   SPI.begin();
   rfid.PCD_Init();
+  Serial.print("[RFID] RC522 Reader Firmware: ");
+  rfid.PCD_DumpVersionToSerial();
   Serial.println("[RFID] RC522 Scanner Initialized.");
 
-  // Initialize HX711 Load Cell
-  scale.begin(HX711_DOUT_PIN, HX711_SCK_PIN);
-  Serial.println("[SCALE] HX711 Initializing...");
-  if (scale.is_ready()) {
+  // Initialize HX711 Load Cell (Safe probe to avoid infinite hang if scale is not wired)
+  Serial.println("[SCALE] Probing for HX711 Load Cell...");
+  if (isHX711Connected()) {
+    scale.begin(HX711_DOUT_PIN, HX711_SCK_PIN);
     scale.set_scale(CALIBRATION_FACTOR);
     scale.tare(); // Zero the scale on startup with empty container
-    Serial.println("[SCALE] Scale tared and zeroed.");
+    Serial.println("[SCALE] HX711 Scale initialized and zeroed.");
   } else {
-    Serial.println("[SCALE] Warning: HX711 not detected. Check DOUT/SCK wiring.");
+    Serial.println("[SCALE] HX711 not detected. Running in RFID-only testing mode.");
   }
 
   showScreen("Ready to Serve!", "Tap RFID Card", "Scale: 0.00g");
   beep(200, 1);
   currentState = STATE_IDLE_WAIT_CARD;
+  Serial.println("[SYSTEM] Ready! Please tap your RFID card against the reader.");
 }
 
 // -------------------------------------------------------------------------------------
