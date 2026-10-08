@@ -109,14 +109,22 @@ void beep(int durationMs, int count = 1) {
   }
 }
 
+bool isLidCurrentlyLocked = false;
+
 void lockLid() {
-  dispenserServo.write(SERVO_LOCKED_ANGLE);
-  Serial.printf("[SERVO] Rotated to %d deg (LOCKED)\n", SERVO_LOCKED_ANGLE);
+  if (!isLidCurrentlyLocked) {
+    dispenserServo.write(SERVO_LOCKED_ANGLE);
+    Serial.printf("[SERVO] Latch LOCKED (%d deg)\n", SERVO_LOCKED_ANGLE);
+    isLidCurrentlyLocked = true;
+  }
 }
 
 void unlockLid() {
-  dispenserServo.write(SERVO_UNLOCKED_ANGLE);
-  Serial.printf("[SERVO] Rotated to %d deg (UNLOCKED)\n", SERVO_UNLOCKED_ANGLE);
+  if (isLidCurrentlyLocked) {
+    dispenserServo.write(SERVO_UNLOCKED_ANGLE);
+    Serial.printf("[SERVO] Latch UNLOCKED (%d deg)\n", SERVO_UNLOCKED_ANGLE);
+    isLidCurrentlyLocked = false;
+  }
 }
 
 bool isLidClosed() {
@@ -357,12 +365,10 @@ void loop() {
     // STATE 1: IDLE - WAITING FOR STUDENT TO TAP RFID CARD
     // ---------------------------------------------------------
     case STATE_IDLE_WAIT_CARD: {
-      lockLid();
-
       // Look for a new RFID card
       if (!rfid.PICC_IsNewCardPresent() || !rfid.PICC_ReadCardSerial()) {
         delay(50);
-        return;
+        break;
       }
 
       // Convert UID to uppercase hexadecimal string (e.g. "43A1B2C3")
