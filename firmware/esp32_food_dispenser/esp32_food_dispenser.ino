@@ -31,6 +31,8 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include "soc/soc.h"
+#include "soc/rtc_cntl_reg.h"
 
 // -------------------------------------------------------------------------------------
 // 1. PIN CONFIGURATIONS
@@ -276,6 +278,9 @@ bool isHX711Connected() {
 // 7. SETUP
 // -------------------------------------------------------------------------------------
 void setup() {
+  // Disable brownout detector to prevent reboot loop during WiFi power spikes
+  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
+
   Serial.begin(115200);
   delay(1000);
   Serial.println("\n\n=======================================================");
@@ -306,6 +311,7 @@ void setup() {
   // Initialize WiFi
   Serial.printf("[WIFI] Connecting to SSID: '%s'...\n", WIFI_SSID);
   WiFi.mode(WIFI_STA);
+  WiFi.setTxPower(WIFI_POWER_15dBm); // Slightly reduce peak TX surge power
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
   int attempts = 0;
