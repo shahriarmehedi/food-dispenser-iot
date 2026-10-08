@@ -23,28 +23,28 @@ export default function ManualPage() {
   return (
     <div className="space-y-6 max-w-5xl pb-12">
       {/* Header Banner */}
-      <div className="rounded-3xl border border-[#1b2235] bg-gradient-to-br from-[#0f1420] via-[#090c13] to-[#0f1420] p-6 lg:p-8 relative overflow-hidden">
+      <div className="rounded-3xl border border-[#1b2235] bg-gradient-to-br from-[#0f1420] via-[#090c13] to-[#0f1420] p-4 sm:p-6 lg:p-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
           <div>
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-medium mb-3">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-[11px] sm:text-xs font-medium mb-2.5">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Project Documentation & Technical Manual</span>
             </div>
-            <h1 className="text-2xl font-medium text-slate-100 tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-medium text-slate-100 tracking-tight">
               Smart Weight-Based Food Dispenser
             </h1>
-            <p className="text-xs text-slate-400 mt-1.5 max-w-2xl font-light leading-relaxed">
+            <p className="text-[11px] sm:text-xs text-slate-400 mt-1 max-w-2xl font-light leading-relaxed">
               Complete engineering manual, hardware wiring schematics, ESP32 firmware flashing routine, and cloud synchronization architecture.
             </p>
           </div>
 
-          <div className="flex items-center space-x-2 self-start md:self-auto shrink-0">
-            <span className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-[#151b2a] border border-[#222a42] text-[11px] text-slate-300 font-medium">
+          <div className="flex flex-wrap items-center gap-2 self-start md:self-auto shrink-0 pt-1 md:pt-0">
+            <span className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-[#151b2a] border border-[#222a42] text-[10px] sm:text-[11px] text-slate-300 font-medium">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span>Gateway: v1.0.0</span>
             </span>
-            <span className="px-3 py-1.5 rounded-full bg-[#151b2a] border border-[#222a42] text-[11px] text-sky-400 font-mono">
+            <span className="px-3 py-1.5 rounded-full bg-[#151b2a] border border-[#222a42] text-[10px] sm:text-[11px] text-sky-400 font-mono">
               Servo Edition
             </span>
           </div>
@@ -52,7 +52,7 @@ export default function ManualPage() {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex items-center space-x-2 overflow-x-auto pb-1 border-b border-[#1b2235]">
+      <div className="flex items-center space-x-2 overflow-x-auto pb-2 border-b border-[#1b2235] scrollbar-thin scrollbar-thumb-[#1b2235]">
         {[
           { id: 'overview', label: '1. How It Works', icon: Layers },
           { id: 'hardware', label: '2. Hardware & Wiring', icon: Cpu },
@@ -66,7 +66,7 @@ export default function ManualPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
-              className={`flex items-center space-x-2 px-4 py-2.5 rounded-full text-xs font-medium whitespace-nowrap transition-smooth ${
+              className={`flex items-center space-x-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full text-[11px] sm:text-xs font-medium whitespace-nowrap transition-smooth shrink-0 ${
                 isActive
                   ? 'bg-[#0084ff] text-white shadow-sky-pill'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-[#151b2a]'

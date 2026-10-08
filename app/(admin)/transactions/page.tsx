@@ -13,6 +13,7 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   RefreshCw,
+  Calendar,
 } from 'lucide-react';
 import { formatBDT, formatWeight } from '@/lib/utils';
 
@@ -73,21 +74,21 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-medium text-slate-100 tracking-tight flex items-center gap-2.5">
+          <h1 className="text-lg sm:text-xl font-medium text-slate-100 tracking-tight flex items-center gap-2">
             <Receipt className="w-5 h-5 text-sky-400" />
             <span>Audit & Transactions Ledger</span>
           </h1>
-          <p className="text-xs text-slate-400 mt-1 font-light">
+          <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5 font-light">
             Cryptographic audit trail of all dispenser checkouts and administrative balance recharges.
           </p>
         </div>
         <button
           onClick={handleExportCsv}
-          className="flex items-center space-x-2 px-4 py-2.5 rounded-full bg-[#151b2a] hover:bg-[#1b2235] border border-[#222a42] text-slate-200 text-xs font-medium transition-smooth self-start sm:self-auto"
+          className="flex items-center justify-center space-x-2 px-4 py-2.5 rounded-full bg-[#151b2a] hover:bg-[#1b2235] border border-[#222a42] text-slate-200 text-xs font-medium transition-smooth w-full sm:w-auto"
         >
           <Download className="w-3.5 h-3.5 text-sky-400" />
           <span>Export to CSV</span>
@@ -95,8 +96,8 @@ export default function TransactionsPage() {
       </div>
 
       {/* Filter Toolbar */}
-      <div className="bg-[#0f1420]/80 p-4 rounded-3xl border border-[#1b2235] backdrop-blur-sm space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="bg-[#0f1420]/80 p-3 sm:p-4 rounded-3xl border border-[#1b2235] backdrop-blur-sm space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-3.5 top-3 h-3.5 w-3.5 text-slate-500" />
@@ -113,25 +114,25 @@ export default function TransactionsPage() {
           </div>
 
           {/* Type Filter */}
-          <div className="flex items-center space-x-1">
-            <Filter className="w-3.5 h-3.5 text-slate-500 mr-1" />
+          <div className="relative">
+            <Filter className="absolute left-3.5 top-3 h-3.5 w-3.5 text-slate-500" />
             <select
               value={type}
               onChange={(e) => {
                 setType(e.target.value);
                 setPage(1);
               }}
-              className="w-full bg-[#090c13] border border-[#1b2235] rounded-2xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-sky-500 transition-colors"
+              className="w-full bg-[#090c13] border border-[#1b2235] rounded-2xl pl-10 pr-8 py-2 text-xs text-slate-200 focus:outline-none focus:border-sky-500 transition-colors appearance-none"
             >
-              <option value="ALL">All Types</option>
-              <option value="DISPENSER_PURCHASE">Dispenser Purchases</option>
-              <option value="ADMIN_RECHARGE">Admin Recharges</option>
-              <option value="MANUAL_ADJUSTMENT">Manual Adjustments</option>
+              <option value="ALL">All Event Types</option>
+              <option value="DISPENSER_PURCHASE">Food Dispenser Purchase</option>
+              <option value="ADMIN_RECHARGE">Admin Top-Up</option>
+              <option value="MANUAL_ADJUSTMENT">Manual Adjustment</option>
             </select>
           </div>
 
           {/* From Date */}
-          <div>
+          <div className="relative">
             <input
               type="date"
               value={fromDate}
@@ -139,11 +140,12 @@ export default function TransactionsPage() {
                 setFromDate(e.target.value);
                 setPage(1);
               }}
-              className="w-full bg-[#090c13] border border-[#1b2235] rounded-2xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-sky-500 transition-colors"
+              placeholder="From Date"
+              className="w-full bg-[#090c13] border border-[#1b2235] rounded-2xl px-3.5 py-2 text-xs text-slate-300 focus:outline-none focus:border-sky-500 transition-colors"
             />
           </div>
 
-          {/* To Date */}
+          {/* To Date + Refresh */}
           <div className="flex items-center space-x-2">
             <input
               type="date"
@@ -152,11 +154,13 @@ export default function TransactionsPage() {
                 setToDate(e.target.value);
                 setPage(1);
               }}
-              className="w-full bg-[#090c13] border border-[#1b2235] rounded-2xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-sky-500 transition-colors"
+              placeholder="To Date"
+              className="w-full bg-[#090c13] border border-[#1b2235] rounded-2xl px-3.5 py-2 text-xs text-slate-300 focus:outline-none focus:border-sky-500 transition-colors"
             />
+
             <button
               onClick={() => mutate()}
-              className="p-2 rounded-2xl border border-[#1b2235] bg-[#090c13] hover:bg-[#151b2a] text-slate-400 hover:text-slate-200 transition-smooth"
+              className="p-2.5 rounded-2xl border border-[#1b2235] bg-[#090c13] hover:bg-[#151b2a] text-slate-400 hover:text-slate-200 transition-smooth shrink-0"
               title="Refresh"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isValidating ? 'animate-spin text-sky-400' : ''}`} />
@@ -165,8 +169,79 @@ export default function TransactionsPage() {
         </div>
       </div>
 
-      {/* Ledger Table */}
-      <div className="rounded-3xl border border-[#1b2235] bg-[#0f1420]/80 overflow-hidden shadow-card-subtle backdrop-blur-sm">
+      {/* Loading state */}
+      {isLoading && transactions.length === 0 && (
+        <div className="rounded-3xl border border-[#1b2235] bg-[#0f1420]/80 p-8 text-center text-slate-500 font-light">
+          <div className="flex items-center justify-center space-x-2 text-xs">
+            <RefreshCw className="w-4 h-4 animate-spin text-sky-400" />
+            <span>Loading transaction audit records...</span>
+          </div>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!isLoading && transactions.length === 0 && (
+        <div className="rounded-3xl border border-[#1b2235] bg-[#0f1420]/80 p-8 text-center text-slate-500 font-light text-xs">
+          No transactions found for the selected query.
+        </div>
+      )}
+
+      {/* MOBILE CARD VIEW (< md screens) */}
+      <div className="md:hidden space-y-3">
+        {transactions.map((tx) => {
+          const isPurchase = tx.type === 'DISPENSER_PURCHASE';
+
+          return (
+            <div
+              key={tx.id}
+              className="rounded-3xl border border-[#1b2235] bg-[#0f1420]/90 p-4 space-y-3 shadow-card-subtle"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="text-xs font-medium text-slate-100">{tx.student.name}</h3>
+                  <div className="text-[10px] text-slate-400 font-light mt-0.5">
+                    ID: {tx.student.studentId} &middot; <span className="font-mono text-sky-400">{tx.student.cardUid}</span>
+                  </div>
+                </div>
+
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                    isPurchase
+                      ? 'bg-sky-500/10 text-sky-300 border border-sky-500/20'
+                      : 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
+                  }`}
+                >
+                  {isPurchase ? 'Dispense' : 'Top-Up'}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#1b2235]/60 text-xs">
+                <div>
+                  <div className="text-[10px] text-slate-500 font-light">Food Weight</div>
+                  <div className="font-medium text-slate-200">
+                    {tx.weightTakenGrams !== null ? formatWeight(tx.weightTakenGrams) : '—'}
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <div className="text-[10px] text-slate-500 font-light">Amount</div>
+                  <div className={`font-medium ${isPurchase ? 'text-rose-400' : 'text-emerald-400'}`}>
+                    {isPurchase ? '-' : '+'}{formatBDT(Math.abs(tx.amount))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-[#1b2235]/60 text-[10px] text-slate-500">
+                <span>{new Date(tx.createdAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}</span>
+                <span>Post-Bal: <strong className="text-slate-300 font-normal">{formatBDT(tx.postBalance)}</strong></span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* DESKTOP TABLE VIEW (md+ screens) */}
+      <div className="hidden md:block rounded-3xl border border-[#1b2235] bg-[#0f1420]/80 overflow-hidden shadow-card-subtle backdrop-blur-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-slate-300">
             <thead className="bg-[#090c13]/80 text-[11px] text-slate-400 font-medium border-b border-[#1b2235]">
@@ -175,122 +250,93 @@ export default function TransactionsPage() {
                 <th scope="col" className="px-5 py-3.5 font-medium">Student Name</th>
                 <th scope="col" className="px-5 py-3.5 font-medium">Card UID</th>
                 <th scope="col" className="px-5 py-3.5 font-medium">Type / Weight</th>
-                <th scope="col" className="px-5 py-3.5 text-right font-medium">Amount (BDT)</th>
+                <th scope="col" className="px-5 py-3.5 text-right font-medium">Amount</th>
                 <th scope="col" className="px-5 py-3.5 text-right font-medium">Post Balance</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#1b2235]/60">
-              {isLoading && transactions.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-5 py-8 text-center text-slate-500 font-light">
-                    <div className="flex items-center justify-center space-x-2">
-                      <RefreshCw className="w-4 h-4 animate-spin text-sky-400" />
-                      <span>Loading ledger records...</span>
-                    </div>
-                  </td>
-                </tr>
-              ) : transactions.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-5 py-8 text-center text-slate-500 font-light">
-                    No transactions found for the specified criteria.
-                  </td>
-                </tr>
-              ) : (
-                transactions.map((tx) => {
-                  const isPurchase = tx.type === 'DISPENSER_PURCHASE';
+              {transactions.map((tx) => {
+                const isPurchase = tx.type === 'DISPENSER_PURCHASE';
 
-                  return (
-                    <tr key={tx.id} className="hover:bg-[#151b2a]/60 transition-colors">
-                      <td className="px-5 py-3.5">
-                        <div className="font-mono text-[11px] text-slate-400 truncate max-w-[140px]" title={tx.id}>
-                          {tx.id}
-                        </div>
-                        <div className="text-[10px] text-slate-500 font-light">
-                          {new Date(tx.createdAt).toLocaleString([], {
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit',
-                          })}
-                        </div>
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <div className="text-slate-100 font-medium">{tx.student.name}</div>
-                        <div className="text-[11px] text-slate-500 font-light">ID: {tx.student.studentId}</div>
-                      </td>
-                      <td className="px-5 py-3.5 font-mono text-[11px] text-sky-400">
+                return (
+                  <tr key={tx.id} className="hover:bg-[#151b2a]/60 transition-colors">
+                    <td className="px-5 py-3.5 whitespace-nowrap">
+                      <div className="font-mono text-slate-400 text-[11px] truncate max-w-[100px]">
+                        {tx.id.substring(0, 10)}...
+                      </div>
+                      <div className="text-[11px] text-slate-500">
+                        {new Date(tx.createdAt).toLocaleDateString()} {new Date(tx.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <div className="text-slate-100 font-medium">{tx.student.name}</div>
+                      <div className="text-[11px] text-slate-500 font-light">ID: {tx.student.studentId}</div>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <span className="font-mono text-[11px] text-sky-400 bg-[#151b2a] px-2 py-0.5 rounded-full border border-[#222a42]">
                         {tx.student.cardUid}
-                      </td>
-                      <td className="px-5 py-3.5">
-                        {isPurchase ? (
-                          <div className="flex items-center space-x-1.5 text-xs">
-                            <Scale className="w-3.5 h-3.5 text-sky-400" />
-                            <span className="font-medium text-slate-200">
-                              {formatWeight(tx.weightTakenGrams ?? 0)}
-                            </span>
-                            {tx.costPerGram && (
-                              <span className="text-[10px] text-slate-500 font-light">
-                                (@{formatBDT(tx.costPerGram)}/g)
-                              </span>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
-                            Recharge Credit
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center space-x-1.5">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                            isPurchase
+                              ? 'bg-sky-500/10 text-sky-300 border border-sky-500/20'
+                              : 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
+                          }`}
+                        >
+                          {isPurchase ? 'Dispense' : 'Top-Up'}
+                        </span>
+                        {tx.weightTakenGrams !== null && (
+                          <span className="text-[11px] text-slate-400 flex items-center">
+                            <Scale className="w-3 h-3 mr-1 text-slate-500" />
+                            {formatWeight(tx.weightTakenGrams)}
                           </span>
                         )}
-                      </td>
-                      <td className="px-5 py-3.5 text-right font-medium whitespace-nowrap">
-                        {tx.amount < 0 ? (
-                          <span className="text-rose-400 flex items-center justify-end font-medium">
-                            <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" />
-                            -{formatBDT(Math.abs(tx.amount))}
-                          </span>
-                        ) : tx.amount > 0 ? (
-                          <span className="text-emerald-400 flex items-center justify-end font-medium">
-                            <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" />
-                            +{formatBDT(tx.amount)}
-                          </span>
-                        ) : (
-                          <span className="text-slate-400">৳0.00</span>
-                        )}
-                      </td>
-                      <td className="px-5 py-3.5 text-right font-medium text-slate-200 whitespace-nowrap">
-                        {formatBDT(tx.postBalance)}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
+                      </div>
+                    </td>
+                    <td className="px-5 py-3.5 text-right font-medium whitespace-nowrap">
+                      <span className={isPurchase ? 'text-rose-400' : 'text-emerald-400'}>
+                        {isPurchase ? '-' : '+'}{formatBDT(Math.abs(tx.amount))}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5 text-right font-medium text-slate-300 whitespace-nowrap">
+                      {formatBDT(tx.postBalance)}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
+      </div>
 
-        {/* Pagination Bar */}
-        <div className="p-4 border-t border-[#1b2235] bg-[#090c13]/60 flex items-center justify-between text-xs text-slate-400">
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between bg-[#0f1420]/80 p-3 sm:p-4 rounded-3xl border border-[#1b2235] text-xs text-slate-400">
           <div>
-            Page <span className="font-medium text-slate-200">{page}</span> of{' '}
-            <span className="font-medium text-slate-200">{totalPages}</span> ({data?.total || 0} total events)
+            Page <span className="text-slate-200 font-medium">{page}</span> of <span className="text-slate-200 font-medium">{totalPages}</span>
           </div>
+
           <div className="flex items-center space-x-2">
             <button
               disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="p-1.5 rounded-full border border-[#1b2235] bg-[#0f1420] hover:bg-[#151b2a] text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-smooth"
+              onClick={() => setPage(page - 1)}
+              className="p-2 rounded-2xl border border-[#1b2235] bg-[#090c13] hover:bg-[#151b2a] text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-smooth"
             >
-              <ChevronLeft className="w-3.5 h-3.5" />
+              <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               disabled={page >= totalPages}
-              onClick={() => setPage((p) => p + 1)}
-              className="p-1.5 rounded-full border border-[#1b2235] bg-[#0f1420] hover:bg-[#151b2a] text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-smooth"
+              onClick={() => setPage(page + 1)}
+              className="p-2 rounded-2xl border border-[#1b2235] bg-[#090c13] hover:bg-[#151b2a] text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-smooth"
             >
-              <ChevronRight className="w-3.5 h-3.5" />
+              <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

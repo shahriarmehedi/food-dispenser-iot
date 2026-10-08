@@ -57,13 +57,13 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-20 lg:w-64 border-r border-[#1b2235] bg-[#090c13] flex flex-col shrink-0 transition-all duration-300">
+    <aside className="hidden lg:flex w-64 border-r border-[#1b2235] bg-[#090c13] flex-col shrink-0 transition-all duration-300">
       {/* Brand Header */}
       <div className="p-5 flex items-center space-x-3 border-b border-[#1b2235]">
         <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#0084ff] to-[#38bdf8] flex items-center justify-center text-white shadow-sky-pill shrink-0">
           <Cpu className="w-5 h-5" />
         </div>
-        <div className="hidden lg:block overflow-hidden">
+        <div className="overflow-hidden">
           <div className="text-sm font-medium text-slate-100 tracking-tight truncate">Smart Vending</div>
           <div className="text-[11px] text-sky-400 font-light truncate">IoT Food Terminal</div>
         </div>
@@ -87,9 +87,9 @@ export default function Sidebar() {
               )}
             >
               <Icon className={cn('w-5 h-5 shrink-0 transition-colors', isActive ? 'text-sky-400' : 'text-slate-400 group-hover:text-slate-200')} />
-              <span className="hidden lg:block font-medium truncate">{item.name}</span>
+              <span className="font-medium truncate">{item.name}</span>
               {isActive && (
-                <div className="absolute right-2.5 w-1.5 h-1.5 rounded-full bg-[#0084ff] shadow-sky-glow hidden lg:block" />
+                <div className="absolute right-2.5 w-1.5 h-1.5 rounded-full bg-[#0084ff] shadow-sky-glow" />
               )}
             </Link>
           );
@@ -104,7 +104,7 @@ export default function Sidebar() {
           title="Log out of admin session"
         >
           <LogOut className="w-4 h-4 shrink-0 text-slate-500 group-hover:text-rose-400 transition-colors" />
-          <span className="hidden lg:block font-medium">Log Out</span>
+          <span className="font-medium">Log Out</span>
         </button>
       </div>
     </aside>
