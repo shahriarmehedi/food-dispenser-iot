@@ -98,11 +98,12 @@ float activeStudentBalance = 0.0;
 float initialWeightGrams = 0.0;
 bool scaleInitialized = false;
 unsigned long dispenseStartTime = 0;
-const unsigned long MAX_DISPENSE_TIMEOUT_MS = 60000; // 60 seconds auto-lock safety timeout
+unsigned long maxDispenseTimeoutMs = 30000; // Auto-lock timeout in ms (default 30s, dynamically synchronized from Dashboard)
 
-// Cloud Heartbeat Telemetry
+// Cloud Heartbeat & Remote Web Command Telemetry
 unsigned long lastHeartbeatTime = 0;
-const unsigned long HEARTBEAT_INTERVAL_MS = 20000; // Ping cloud every 20s for live ONLINE status
+const unsigned long HEARTBEAT_INTERVAL_MS = 5000; // Ping cloud every 5s for live ONLINE status & remote commands
+String pendingAckCommand = "";
 
 // -------------------------------------------------------------------------------------
 // 5. HELPER FUNCTIONS: HARDWARE CONTROL & DISPLAY
@@ -203,6 +204,15 @@ bool apiAuthenticateCard(String cardUid, String &outName, float &outBalance, Str
     if (httpCode == 200 && authorized) {
       outName = resDoc["studentName"].as<String>();
       outBalance = resDoc["balance"].as<float>();
+
+      if (resDoc.containsKey("latchTimeoutSeconds")) {
+        unsigned long sec = resDoc["latchTimeoutSeconds"].as<unsigned long>();
+        if (sec >= 5 && sec <= 300) {
+          maxDispenseTimeoutMs = sec * 1000;
+          Serial.printf("[CONFIG] Dynamic Latch Timeout applied: %lu seconds\n", sec);
+        }
+      }
+
       https.end();
       return true;
     }
@@ -282,7 +292,7 @@ bool isHX711Connected() {
 }
 
 // -------------------------------------------------------------------------------------
-// Periodic Heartbeat Ping to Cloud Dashboard
+// Periodic Heartbeat Ping & Remote Web Commands from Cloud Dashboard
 void apiSendHeartbeat() {
   if (WiFi.status() != WL_CONNECTED) return;
 
@@ -303,13 +313,55 @@ void apiSendHeartbeat() {
   doc["servoLocked"] = isLidCurrentlyLocked;
   doc["uptimeSec"] = millis() / 1000;
 
+  if (pendingAckCommand.length() > 0) {
+    doc["ackCommand"] = pendingAckCommand;
+  }
+
   String requestBody;
   serializeJson(doc, requestBody);
 
   int httpCode = https.POST(requestBody);
   if (httpCode > 0) {
-    Serial.printf("[HEARTBEAT] Ping sent (%d) | IP: %s | RSSI: %d dBm\n", 
-                  httpCode, WiFi.localIP().toString().c_str(), WiFi.RSSI());
+    if (pendingAckCommand.length() > 0) {
+      pendingAckCommand = ""; // Cleared after delivering to server
+    }
+
+    String response = https.getString();
+    StaticJsonDocument<384> resDoc;
+    deserializeJson(resDoc, response);
+
+    // 1. Dynamic auto-lock timeout from Dashboard Settings
+    if (resDoc.containsKey("latchTimeoutSeconds")) {
+      unsigned long sec = resDoc["latchTimeoutSeconds"].as<unsigned long>();
+      if (sec >= 5 && sec <= 300) {
+        maxDispenseTimeoutMs = sec * 1000;
+      }
+    }
+
+    // 2. Remote Web Commands (Unlock / Lock from Web Dashboard)
+    if (resDoc.containsKey("pendingCommand") && !resDoc["pendingCommand"].isNull()) {
+      String cmd = resDoc["pendingCommand"].as<String>();
+      if (cmd == "UNLOCK") {
+        Serial.println("\n[WEB COMMAND] Received REMOTE UNLOCK request from Dashboard!");
+        unlockLid();
+        beep(100, 2);
+        showScreen("Remote Command", "Lid Unlocked!", "From Web Dashboard");
+        dispenseStartTime = millis();
+        currentState = STATE_DISPENSING;
+        pendingAckCommand = "UNLOCK";
+      } else if (cmd == "LOCK") {
+        Serial.println("\n[WEB COMMAND] Received REMOTE LOCK request from Dashboard!");
+        lockLid();
+        beep(200, 1);
+        showScreen("Remote Command", "Lid Locked!", "From Web Dashboard");
+        currentState = STATE_IDLE_WAIT_CARD;
+        pendingAckCommand = "LOCK";
+      }
+    }
+
+    Serial.printf("[HEARTBEAT] Ping OK (%d) | IP: %s | RSSI: %d dBm | Latch: %s\n", 
+                  httpCode, WiFi.localIP().toString().c_str(), WiFi.RSSI(),
+                  isLidCurrentlyLocked ? "LOCKED" : "UNLOCKED");
   } else {
     Serial.printf("[HEARTBEAT] Ping failed: %s\n", https.errorToString(httpCode).c_str());
   }
@@ -504,7 +556,7 @@ void loop() {
     case STATE_DISPENSING: {
       // Check if student closed the lid (or if safety timeout exceeded)
       bool closed = isLidClosed();
-      bool timedOut = (millis() - dispenseStartTime) > MAX_DISPENSE_TIMEOUT_MS;
+      bool timedOut = (millis() - dispenseStartTime) > maxDispenseTimeoutMs;
 
       if (closed || timedOut) {
         if (timedOut) {

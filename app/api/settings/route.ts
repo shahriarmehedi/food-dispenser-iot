@@ -15,6 +15,7 @@ export async function GET() {
       PRICE_PER_GRAM: CONFIG_DEFAULTS.PRICE_PER_GRAM.toFixed(2),
       MIN_BALANCE_THRESHOLD: CONFIG_DEFAULTS.MIN_BALANCE_THRESHOLD.toFixed(2),
       WEIGHT_NOISE_THRESHOLD: CONFIG_DEFAULTS.WEIGHT_NOISE_THRESHOLD.toFixed(2),
+      LATCH_TIMEOUT_SECONDS: CONFIG_DEFAULTS.LATCH_TIMEOUT_SECONDS.toFixed(0),
     };
 
     for (const c of configs) {
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid settings payload' }, { status: 400 });
     }
 
-    const allowedKeys = ['PRICE_PER_GRAM', 'MIN_BALANCE_THRESHOLD', 'WEIGHT_NOISE_THRESHOLD'];
+    const allowedKeys = ['PRICE_PER_GRAM', 'MIN_BALANCE_THRESHOLD', 'WEIGHT_NOISE_THRESHOLD', 'LATCH_TIMEOUT_SECONDS'];
     const updates: { key: string; value: string }[] = [];
 
     for (const key of allowedKeys) {
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
         if (isNaN(val) || val < 0) {
           return NextResponse.json({ error: `Invalid numeric value for ${key}` }, { status: 400 });
         }
-        updates.push({ key, value: val.toFixed(2) });
+        updates.push({ key, value: key === 'LATCH_TIMEOUT_SECONDS' ? Math.round(val).toString() : val.toFixed(2) });
       }
     }
 

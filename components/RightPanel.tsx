@@ -13,6 +13,9 @@ import {
   CheckCircle2,
   AlertCircle,
   Radio,
+  Lock,
+  Unlock,
+  Loader2,
 } from 'lucide-react';
 import { formatBDT } from '@/lib/utils';
 
@@ -23,6 +26,7 @@ interface DeviceStatus {
   rssi: number | null;
   scaleOk: boolean;
   rfidOk: boolean;
+  servoLocked?: boolean;
 }
 
 interface RightPanelProps {
@@ -42,6 +46,33 @@ export default function RightPanel({
 }: RightPanelProps) {
   const isOnline = deviceStatus?.isOnline ?? false;
   const lastSeen = deviceStatus?.lastSeenSecondsAgo;
+  const isLocked = deviceStatus?.servoLocked ?? true;
+
+  const [commandLoading, setCommandLoading] = React.useState(false);
+  const [commandMessage, setCommandMessage] = React.useState<string | null>(null);
+
+  async function handleToggleLatch(action: 'LOCK' | 'UNLOCK') {
+    try {
+      setCommandLoading(true);
+      setCommandMessage(null);
+      const res = await fetch('/api/dispenser/command', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setCommandMessage(action === 'UNLOCK' ? 'Unlock command sent to ESP32' : 'Lock command sent to ESP32');
+        setTimeout(() => setCommandMessage(null), 4000);
+      } else {
+        alert(data.error || 'Failed to queue command');
+      }
+    } catch (err) {
+      console.error('Toggle latch error:', err);
+    } finally {
+      setCommandLoading(false);
+    }
+  }
 
   return (
     <aside className="w-80 shrink-0 space-y-5 hidden xl:block">
@@ -181,6 +212,68 @@ export default function RightPanel({
           <div className="flex items-center justify-between p-2.5 rounded-2xl bg-[#090c13]/70 border border-[#1b2235]">
             <span className="text-slate-400">Active Students:</span>
             <span className="text-sky-400 font-medium">{activeStudentsCount} enrolled</span>
+          </div>
+
+          {/* Latch Status & Remote Web Control */}
+          <div className="p-3 rounded-2xl bg-[#090c13] border border-[#1b2235] space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-300 font-medium text-xs flex items-center gap-1.5">
+                {!isLocked ? (
+                  <Unlock className="w-3.5 h-3.5 text-amber-400" />
+                ) : (
+                  <Lock className="w-3.5 h-3.5 text-sky-400" />
+                )}
+                <span>Dispenser Latch</span>
+              </span>
+              <span
+                className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-medium ${
+                  !isLocked
+                    ? 'bg-amber-950/80 text-amber-300 border border-amber-800/40'
+                    : 'bg-slate-800/80 text-slate-300 border border-slate-700/40'
+                }`}
+              >
+                {!isLocked ? 'UNLOCKED' : 'LOCKED'}
+              </span>
+            </div>
+
+            {/* Quick Web Action Buttons */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                disabled={commandLoading || !isOnline}
+                onClick={() => handleToggleLatch('UNLOCK')}
+                className="py-1.5 px-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-medium flex items-center justify-center space-x-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
+                title="Send remote command to unlock the food dispenser lid"
+              >
+                {commandLoading ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Unlock className="w-3 h-3" />
+                )}
+                <span>Web Unlock</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={commandLoading || !isOnline}
+                onClick={() => handleToggleLatch('LOCK')}
+                className="py-1.5 px-2.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/30 text-[11px] font-medium flex items-center justify-center space-x-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
+                title="Send remote command to lock the food dispenser lid"
+              >
+                {commandLoading ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Lock className="w-3 h-3" />
+                )}
+                <span>Web Lock</span>
+              </button>
+            </div>
+
+            {commandMessage && (
+              <p className="text-[10px] text-emerald-400 font-mono text-center">
+                ✓ {commandMessage}
+              </p>
+            )}
           </div>
         </div>
 

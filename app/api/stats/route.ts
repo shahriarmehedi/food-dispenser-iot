@@ -52,6 +52,7 @@ export async function GET() {
       rssi: null as number | null,
       scaleOk: false,
       rfidOk: true,
+      servoLocked: true,
     };
 
     if (heartbeatConfig?.value) {
@@ -65,6 +66,7 @@ export async function GET() {
           rssi: telemetry.rssi ?? null,
           scaleOk: !!telemetry.scaleOk,
           rfidOk: telemetry.rfidOk ?? true,
+          servoLocked: telemetry.servoLocked ?? true,
         };
       } catch (e) {
         console.error('Failed to parse heartbeat telemetry:', e);

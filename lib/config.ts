@@ -4,6 +4,7 @@ export const CONFIG_DEFAULTS = {
   PRICE_PER_GRAM: 0.50,
   MIN_BALANCE_THRESHOLD: 10.00,
   WEIGHT_NOISE_THRESHOLD: 5.00,
+  LATCH_TIMEOUT_SECONDS: 30.00,
 } as const;
 
 export async function getSystemConfigNumber(key: string, defaultValue: number): Promise<number> {
@@ -30,4 +31,8 @@ export async function getMinBalanceThreshold(): Promise<number> {
 
 export async function getWeightNoiseThreshold(): Promise<number> {
   return getSystemConfigNumber('WEIGHT_NOISE_THRESHOLD', CONFIG_DEFAULTS.WEIGHT_NOISE_THRESHOLD);
+}
+
+export async function getLatchTimeoutSeconds(): Promise<number> {
+  return getSystemConfigNumber('LATCH_TIMEOUT_SECONDS', CONFIG_DEFAULTS.LATCH_TIMEOUT_SECONDS);
 }

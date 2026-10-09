@@ -32,6 +32,7 @@ interface StatsResponse {
     rssi: number | null;
     scaleOk: boolean;
     rfidOk: boolean;
+    servoLocked?: boolean;
   };
 }
 

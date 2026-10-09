@@ -11,6 +11,7 @@ import {
   CheckCircle,
   AlertCircle,
   RefreshCw,
+  Timer,
 } from 'lucide-react';
 
 interface SettingsResponse {
@@ -18,6 +19,7 @@ interface SettingsResponse {
     PRICE_PER_GRAM: string;
     MIN_BALANCE_THRESHOLD: string;
     WEIGHT_NOISE_THRESHOLD: string;
+    LATCH_TIMEOUT_SECONDS?: string;
   };
 }
 
@@ -29,6 +31,7 @@ export default function SettingsPage() {
   const [pricePerGram, setPricePerGram] = useState('0.50');
   const [minBalanceThreshold, setMinBalanceThreshold] = useState('10.00');
   const [weightNoiseThreshold, setWeightNoiseThreshold] = useState('5.00');
+  const [latchTimeoutSeconds, setLatchTimeoutSeconds] = useState('30');
   const [saving, setSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -37,6 +40,7 @@ export default function SettingsPage() {
       if (data.configs.PRICE_PER_GRAM) setPricePerGram(data.configs.PRICE_PER_GRAM);
       if (data.configs.MIN_BALANCE_THRESHOLD) setMinBalanceThreshold(data.configs.MIN_BALANCE_THRESHOLD);
       if (data.configs.WEIGHT_NOISE_THRESHOLD) setWeightNoiseThreshold(data.configs.WEIGHT_NOISE_THRESHOLD);
+      if (data.configs.LATCH_TIMEOUT_SECONDS) setLatchTimeoutSeconds(data.configs.LATCH_TIMEOUT_SECONDS);
     }
   }, [data]);
 
@@ -53,6 +57,7 @@ export default function SettingsPage() {
           PRICE_PER_GRAM: parseFloat(pricePerGram),
           MIN_BALANCE_THRESHOLD: parseFloat(minBalanceThreshold),
           WEIGHT_NOISE_THRESHOLD: parseFloat(weightNoiseThreshold),
+          LATCH_TIMEOUT_SECONDS: parseInt(latchTimeoutSeconds, 10) || 30,
         }),
       });
 
@@ -185,6 +190,35 @@ export default function SettingsPage() {
                   value={weightNoiseThreshold}
                   onChange={(e) => setWeightNoiseThreshold(e.target.value)}
                   className="w-full bg-[#090c13] border border-[#1b2235] rounded-2xl pl-3 pr-14 py-2 text-slate-100 font-mono text-xs focus:outline-none focus:border-sky-500 transition-colors"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Config 4: Latch Relock / Dispense Timeout */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-slate-200 flex items-center gap-2">
+                <Timer className="w-4 h-4 text-sky-400" />
+                <span>Latch Auto-Lock Timeout (Seconds)</span>
+              </label>
+              <p className="text-xs text-slate-400 font-light">
+                Duration after lid unlock before the servo latch automatically relocks (if lid is not closed sooner).
+              </p>
+              <span className="text-[11px] font-mono text-slate-500">Key: LATCH_TIMEOUT_SECONDS (e.g. 15, 30, 60s)</span>
+            </div>
+            <div className="w-full sm:w-48">
+              <div className="relative">
+                <span className="absolute right-3.5 top-2.5 text-xs font-mono text-slate-400">sec</span>
+                <input
+                  type="number"
+                  step="1"
+                  min="5"
+                  max="300"
+                  required
+                  value={latchTimeoutSeconds}
+                  onChange={(e) => setLatchTimeoutSeconds(e.target.value)}
+                  className="w-full bg-[#090c13] border border-[#1b2235] rounded-2xl pl-3 pr-12 py-2 text-slate-100 font-mono text-xs focus:outline-none focus:border-sky-500 transition-colors"
                 />
               </div>
             </div>

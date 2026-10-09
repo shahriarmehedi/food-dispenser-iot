@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { normalizeCardUid } from '@/lib/utils';
-import { getMinBalanceThreshold } from '@/lib/config';
+import { getMinBalanceThreshold, getLatchTimeoutSeconds } from '@/lib/config';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Parallel execution for lowest possible latency (<250ms target)
-    const [student, minBalanceThreshold] = await Promise.all([
+    const [student, minBalanceThreshold, latchTimeoutSeconds] = await Promise.all([
       prisma.student.findUnique({
         where: { cardUid },
         select: {
@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
         },
       }),
       getMinBalanceThreshold(),
+      getLatchTimeoutSeconds(),
     ]);
 
     // 1. Check if card exists
@@ -76,6 +77,7 @@ export async function POST(request: NextRequest) {
         authorized: true,
         studentName: student.name,
         balance: currentBalance,
+        latchTimeoutSeconds: Math.round(latchTimeoutSeconds),
         message: 'Access granted',
       },
       {
