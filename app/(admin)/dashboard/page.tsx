@@ -25,6 +25,14 @@ interface StatsResponse {
   successfulDispensesToday: number;
   activeStudentsCount: number;
   totalStudentsCount: number;
+  deviceStatus?: {
+    isOnline: boolean;
+    lastSeenSecondsAgo: number | null;
+    ip: string | null;
+    rssi: number | null;
+    scaleOk: boolean;
+    rfidOk: boolean;
+  };
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -166,6 +174,7 @@ export default function DashboardPage() {
       <RightPanel
         revenueToday={stats?.revenueToday ?? 0}
         activeStudentsCount={stats?.activeStudentsCount ?? 0}
+        deviceStatus={stats?.deviceStatus}
         onOpenRecharge={() => setIsRechargeOpen(true)}
         onOpenEnroll={() => setIsAddStudentOpen(true)}
       />

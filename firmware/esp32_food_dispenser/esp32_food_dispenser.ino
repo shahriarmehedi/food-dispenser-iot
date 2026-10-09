@@ -96,8 +96,13 @@ String activeCardUid = "";
 String activeStudentName = "";
 float activeStudentBalance = 0.0;
 float initialWeightGrams = 0.0;
+bool scaleInitialized = false;
 unsigned long dispenseStartTime = 0;
 const unsigned long MAX_DISPENSE_TIMEOUT_MS = 60000; // 60 seconds auto-lock safety timeout
+
+// Cloud Heartbeat Telemetry
+unsigned long lastHeartbeatTime = 0;
+const unsigned long HEARTBEAT_INTERVAL_MS = 20000; // Ping cloud every 20s for live ONLINE status
 
 // -------------------------------------------------------------------------------------
 // 5. HELPER FUNCTIONS: HARDWARE CONTROL & DISPLAY
@@ -188,6 +193,7 @@ bool apiAuthenticateCard(String cardUid, String &outName, float &outBalance, Str
     String response = https.getString();
     Serial.printf("[API] Auth Code: %d | Body: %s\n", httpCode, response.c_str());
 
+    lastHeartbeatTime = millis();
     StaticJsonDocument<512> resDoc;
     deserializeJson(resDoc, response);
 
@@ -236,6 +242,7 @@ bool apiCheckoutFood(String cardUid, float weightTakenGrams, float &outCharged, 
     String response = https.getString();
     Serial.printf("[API] Checkout Code: %d | Body: %s\n", httpCode, response.c_str());
 
+    lastHeartbeatTime = millis();
     StaticJsonDocument<512> resDoc;
     deserializeJson(resDoc, response);
 
@@ -272,6 +279,41 @@ bool isHX711Connected() {
     delay(10);
   }
   return false;
+}
+
+// -------------------------------------------------------------------------------------
+// Periodic Heartbeat Ping to Cloud Dashboard
+void apiSendHeartbeat() {
+  if (WiFi.status() != WL_CONNECTED) return;
+
+  WiFiClientSecure client;
+  client.setInsecure();
+
+  HTTPClient https;
+  String url = String(SERVER_BASE) + "/api/dispenser/ping";
+  https.begin(client, url);
+  https.addHeader("Content-Type", "application/json");
+
+  StaticJsonDocument<256> doc;
+  doc["deviceId"] = "ESP32-DISPENSER-01";
+  doc["ip"] = WiFi.localIP().toString();
+  doc["rssi"] = WiFi.RSSI();
+  doc["rfidOk"] = true;
+  doc["scaleOk"] = scaleInitialized;
+  doc["servoLocked"] = isLidCurrentlyLocked;
+  doc["uptimeSec"] = millis() / 1000;
+
+  String requestBody;
+  serializeJson(doc, requestBody);
+
+  int httpCode = https.POST(requestBody);
+  if (httpCode > 0) {
+    Serial.printf("[HEARTBEAT] Ping sent (%d) | IP: %s | RSSI: %d dBm\n", 
+                  httpCode, WiFi.localIP().toString().c_str(), WiFi.RSSI());
+  } else {
+    Serial.printf("[HEARTBEAT] Ping failed: %s\n", https.errorToString(httpCode).c_str());
+  }
+  https.end();
 }
 
 // -------------------------------------------------------------------------------------
@@ -343,8 +385,10 @@ void setup() {
     scale.begin(HX711_DOUT_PIN, HX711_SCK_PIN);
     scale.set_scale(CALIBRATION_FACTOR);
     scale.tare(); // Zero the scale on startup with empty container
+    scaleInitialized = true;
     Serial.println("[SCALE] HX711 Scale initialized and zeroed.");
   } else {
+    scaleInitialized = false;
     Serial.println("[SCALE] HX711 not detected. Running in RFID-only testing mode.");
   }
 
@@ -352,6 +396,12 @@ void setup() {
   beep(200, 1);
   currentState = STATE_IDLE_WAIT_CARD;
   Serial.println("[SYSTEM] Ready! Please tap your RFID card against the reader.");
+
+  // Send initial online heartbeat to cloud dashboard
+  if (WiFi.status() == WL_CONNECTED) {
+    apiSendHeartbeat();
+    lastHeartbeatTime = millis();
+  }
 }
 
 // -------------------------------------------------------------------------------------
@@ -363,6 +413,12 @@ void loop() {
     WiFi.reconnect();
     delay(1000);
     return;
+  }
+
+  // Periodic heartbeat ping to cloud dashboard
+  if (millis() - lastHeartbeatTime >= HEARTBEAT_INTERVAL_MS) {
+    lastHeartbeatTime = millis();
+    apiSendHeartbeat();
   }
 
   switch (currentState) {

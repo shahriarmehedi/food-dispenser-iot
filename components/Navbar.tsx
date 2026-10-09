@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import useSWR from 'swr';
 import {
   Shield,
   BookOpen,
@@ -14,11 +15,23 @@ import {
   Users,
   Receipt,
   Sliders,
+  Wifi,
+  WifiOff,
 } from 'lucide-react';
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const router = useRouter();
+
+  const { data: pingData } = useSWR<{ isOnline: boolean; lastSeenSecondsAgo: number; telemetry?: { ip: string; rssi: number } }>(
+    '/api/dispenser/ping',
+    fetcher,
+    { refreshInterval: 4000 }
+  );
+
+  const isEsp32Online = pingData?.isOnline ?? false;
 
   async function handleLogout() {
     try {
@@ -53,17 +66,54 @@ export default function Navbar() {
           </div>
 
           {/* Status pill */}
-          <div className="flex items-center space-x-2 px-2.5 sm:px-3 py-1.5 rounded-full bg-[#151b2a] border border-[#222a42] text-[11px] sm:text-xs">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#0084ff]"></span>
-            </span>
-            <span className="text-slate-300 font-medium truncate max-w-[120px] sm:max-w-none">
-              Gateway
-            </span>
-            <span className="text-[9px] sm:text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-950 text-emerald-400 font-mono font-medium">
-              ONLINE
-            </span>
+          <div
+            className="flex items-center space-x-2 px-2.5 sm:px-3 py-1.5 rounded-full bg-[#151b2a] border border-[#222a42] text-[11px] sm:text-xs"
+            title={
+              isEsp32Online
+                ? `ESP32 Connected: IP ${pingData?.telemetry?.ip || 'Active'}, RSSI: ${pingData?.telemetry?.rssi ? pingData.telemetry.rssi + ' dBm' : 'Good'}`
+                : `ESP32 Offline: Last heartbeat ${pingData?.lastSeenSecondsAgo ? pingData.lastSeenSecondsAgo + 's ago' : 'Never'}`
+            }
+          >
+            {isEsp32Online ? (
+              <>
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="text-slate-300 font-medium">
+                  ESP32
+                </span>
+                <span className="text-[9px] sm:text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-950/80 border border-emerald-800/40 text-emerald-400 font-mono font-medium">
+                  ONLINE
+                </span>
+                {pingData?.telemetry?.ip && (
+                  <span className="hidden md:inline text-[10px] text-slate-500 font-mono">
+                    {pingData.telemetry.ip}
+                  </span>
+                )}
+              </>
+            ) : (
+              <>
+                <span className="relative flex h-2 w-2">
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500/80"></span>
+                </span>
+                <span className="text-slate-400 font-medium">
+                  ESP32
+                </span>
+                <span className="text-[9px] sm:text-[10px] px-1.5 py-0.2 rounded-full bg-amber-950/60 border border-amber-900/40 text-amber-400 font-mono font-medium">
+                  OFFLINE
+                </span>
+                {typeof pingData?.lastSeenSecondsAgo === 'number' && pingData.lastSeenSecondsAgo > 0 && (
+                  <span className="hidden md:inline text-[10px] text-slate-500 font-mono">
+                    {pingData.lastSeenSecondsAgo > 3600
+                      ? `${Math.floor(pingData.lastSeenSecondsAgo / 3600)}h ago`
+                      : pingData.lastSeenSecondsAgo > 60
+                      ? `${Math.floor(pingData.lastSeenSecondsAgo / 60)}m ago`
+                      : `${pingData.lastSeenSecondsAgo}s ago`}
+                  </span>
+                )}
+              </>
+            )}
           </div>
         </div>
 
