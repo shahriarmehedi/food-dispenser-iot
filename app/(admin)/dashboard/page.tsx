@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import useSWR from 'swr';
 import LiveFeedTable from '@/components/LiveFeedTable';
-import AnalyticsChart from '@/components/AnalyticsChart';
+import HopperLevelCard from '@/components/HopperLevelCard';
 import RightPanel from '@/components/RightPanel';
 import AddStudentModal from '@/components/AddStudentModal';
 import RechargeModal from '@/components/RechargeModal';
@@ -15,7 +15,6 @@ import {
   UserPlus,
   RefreshCw,
   ArrowUpRight,
-  PlusCircle,
 } from 'lucide-react';
 import { formatBDT, formatWeight } from '@/lib/utils';
 
@@ -36,6 +35,20 @@ interface StatsResponse {
   };
 }
 
+interface RecentTransactionItem {
+  id: string;
+  createdAt: string;
+  weightTakenGrams: number | null;
+  amount: number;
+  postBalance: number;
+  student: {
+    id: string;
+    name: string;
+    studentId: string;
+    cardUid: string;
+  };
+}
+
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function DashboardPage() {
@@ -50,6 +63,29 @@ export default function DashboardPage() {
       revalidateOnFocus: true,
     }
   );
+
+  const { data: recentData } = useSWR<{ transactions: RecentTransactionItem[] }>(
+    '/api/transactions/recent',
+    fetcher,
+    {
+      refreshInterval: 3000,
+      revalidateOnFocus: true,
+    }
+  );
+
+  const latestTxRaw = recentData?.transactions?.[0];
+  const latestTx = latestTxRaw
+    ? {
+        id: latestTxRaw.id,
+        studentName: latestTxRaw.student.name,
+        studentId: latestTxRaw.student.studentId,
+        cardUid: latestTxRaw.student.cardUid,
+        weightTakenGrams: latestTxRaw.weightTakenGrams,
+        amount: latestTxRaw.amount,
+        postBalance: latestTxRaw.postBalance,
+        createdAt: latestTxRaw.createdAt,
+      }
+    : null;
 
   return (
     <div className="flex flex-col xl:flex-row gap-6">
@@ -85,7 +121,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* 4 KPI Cards Grid (styled like reference "All Transactions" stat card) */}
+        {/* 4 KPI Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Card 1: Revenue Today */}
           <div className="rounded-3xl border border-[#1b2235] bg-[#0f1420]/80 p-5 shadow-card-subtle backdrop-blur-sm relative overflow-hidden group hover:border-[#222a42] transition-smooth">
@@ -164,16 +200,19 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Analytics Interactive Area Chart (like "Income & Expenses" in reference) */}
-        <AnalyticsChart />
+        {/* 1kg Food Tank Capacity & Latest Card Scan Spotlight */}
+        <HopperLevelCard
+          capacityGrams={1000}
+          dispensedTodayGrams={stats?.weightDispensedGramsToday ?? 0}
+          latestTransaction={latestTx}
+        />
 
         {/* Live Feed Real-Time Table */}
         <LiveFeedTable />
       </div>
 
-      {/* Right Companion Panel (like Right Column in reference) */}
+      {/* Right Companion Panel */}
       <RightPanel
-        revenueToday={stats?.revenueToday ?? 0}
         activeStudentsCount={stats?.activeStudentsCount ?? 0}
         deviceStatus={stats?.deviceStatus}
         onOpenRecharge={() => setIsRechargeOpen(true)}

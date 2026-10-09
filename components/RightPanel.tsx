@@ -16,8 +16,8 @@ import {
   Lock,
   Unlock,
   Loader2,
+  Zap,
 } from 'lucide-react';
-import { formatBDT } from '@/lib/utils';
 
 interface DeviceStatus {
   isOnline: boolean;
@@ -32,7 +32,6 @@ interface DeviceStatus {
 interface RightPanelProps {
   onOpenRecharge: () => void;
   onOpenEnroll: () => void;
-  revenueToday: number;
   activeStudentsCount: number;
   deviceStatus?: DeviceStatus;
 }
@@ -40,7 +39,6 @@ interface RightPanelProps {
 export default function RightPanel({
   onOpenRecharge,
   onOpenEnroll,
-  revenueToday,
   activeStudentsCount,
   deviceStatus,
 }: RightPanelProps) {
@@ -62,7 +60,7 @@ export default function RightPanel({
       });
       const data = await res.json();
       if (res.ok) {
-        setCommandMessage(action === 'UNLOCK' ? 'Unlock command sent to ESP32' : 'Lock command sent to ESP32');
+        setCommandMessage(action === 'UNLOCK' ? 'Unlock signal queued' : 'Lock signal queued');
         setTimeout(() => setCommandMessage(null), 4000);
       } else {
         alert(data.error || 'Failed to queue command');
@@ -75,47 +73,36 @@ export default function RightPanel({
   }
 
   return (
-    <aside className="w-80 shrink-0 space-y-5 hidden xl:block">
-      {/* Admin Profile & Dispenser Vault Card */}
-      <div className="rounded-3xl border border-[#1b2235] bg-[#0f1420]/80 p-6 shadow-card-subtle backdrop-blur-sm text-center relative overflow-hidden">
-        {/* Soft background ambient halo */}
-        <div className="absolute -top-12 -right-12 w-32 h-32 bg-sky-500/10 rounded-full blur-2xl pointer-events-none" />
-
-        {/* Circular Avatar with multi-shade ring */}
-        <div className="flex justify-center mb-4">
-          <div className="relative">
-            <div className="w-20 h-20 rounded-full border-2 border-dashed border-sky-400/40 p-1 flex items-center justify-center">
-              <div className="w-full h-full rounded-full bg-gradient-to-tr from-sky-500/20 to-sky-400/10 flex items-center justify-center border border-sky-500/30 text-sky-400">
-                <Shield className="w-8 h-8" />
-              </div>
-            </div>
-            <div className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-[#0084ff] border-2 border-[#0f1420] flex items-center justify-center shadow-sky-pill">
-              <Sparkles className="w-3 h-3 text-white" />
-            </div>
-          </div>
+    <aside className="w-80 shrink-0 space-y-4 hidden xl:block">
+      {/* Quick Terminal Operations */}
+      <div className="rounded-3xl border border-[#1b2235] bg-[#0f1420]/80 p-4 shadow-card-subtle backdrop-blur-sm space-y-2.5">
+        <div className="flex items-center justify-between px-1">
+          <span className="text-xs font-medium text-slate-200 flex items-center gap-1.5">
+            <Zap className="w-3.5 h-3.5 text-sky-400" />
+            <span>Terminal Actions</span>
+          </span>
+          <span className="text-[10px] text-slate-500 font-mono">Operations</span>
         </div>
 
-        <div className="text-xs text-slate-400 font-light">Dispenser Revenue Today</div>
-        <div className="mt-1 text-3xl font-medium text-slate-100 tracking-tight">
-          {formatBDT(revenueToday)}
-        </div>
-        <div className="flex items-center justify-center space-x-1 text-[11px] text-sky-400 mt-1 font-medium">
-          <span>Cloud Gateway Active</span>
-          <span className="text-slate-600">•</span>
-          <span>BDT Currency</span>
-        </div>
-
-        {/* Pill "Top Up Balance >" Button */}
-        <div className="mt-5">
+        <div className="grid grid-cols-1 gap-2">
           <button
-            onClick={onOpenRecharge}
-            className="w-full py-2.5 px-4 rounded-full bg-[#151b2a] hover:bg-[#1a2235] text-slate-200 border border-[#222a42] text-xs font-medium flex items-center justify-between shadow-sm transition-smooth group"
+            onClick={onOpenEnroll}
+            className="w-full py-2.5 px-3.5 rounded-2xl bg-[#0084ff] hover:bg-[#0074e0] text-white text-xs font-medium flex items-center justify-between shadow-sky-pill transition-smooth active:scale-[0.98]"
           >
             <div className="flex items-center space-x-2">
-              <div className="w-5 h-5 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-                <PlusCircle className="w-3.5 h-3.5" />
-              </div>
-              <span>Quick Top-Up Balance</span>
+              <UserCheck className="w-3.5 h-3.5" />
+              <span>Enroll New RFID Card</span>
+            </div>
+            <ChevronRight className="w-3.5 h-3.5 text-white/70" />
+          </button>
+
+          <button
+            onClick={onOpenRecharge}
+            className="w-full py-2.5 px-3.5 rounded-2xl bg-[#151b2a] hover:bg-[#1a2235] text-slate-200 border border-[#222a42] text-xs font-medium flex items-center justify-between transition-smooth group active:scale-[0.98]"
+          >
+            <div className="flex items-center space-x-2">
+              <PlusCircle className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Top-Up Student Balance</span>
             </div>
             <ChevronRight className="w-3.5 h-3.5 text-slate-500 group-hover:translate-x-0.5 transition-transform" />
           </button>
@@ -200,7 +187,7 @@ export default function RightPanel({
               {deviceStatus?.scaleOk ? (
                 <>
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="text-emerald-400">HX711 Ready</span>
+                  <span className="text-emerald-400">HX711 Ready (1kg)</span>
                 </>
               ) : (
                 <span className="text-slate-500 font-light">RFID Test Mode</span>
@@ -275,16 +262,6 @@ export default function RightPanel({
               </p>
             )}
           </div>
-        </div>
-
-        <div className="pt-1">
-          <button
-            onClick={onOpenEnroll}
-            className="w-full py-2.5 px-4 rounded-full bg-[#0084ff] hover:bg-[#0074e0] text-white text-xs font-medium flex items-center justify-center space-x-2 shadow-sky-pill transition-smooth active:scale-[0.98]"
-          >
-            <UserCheck className="w-3.5 h-3.5" />
-            <span>Enroll New RFID Card</span>
-          </button>
         </div>
       </div>
     </aside>
