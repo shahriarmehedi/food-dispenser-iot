@@ -361,6 +361,11 @@ void apiSendHeartbeat() {
         showScreen("Remote Command", "Lid Locked!", "From Web Dashboard");
         currentState = STATE_IDLE_WAIT_CARD;
         pendingAckCommand = "LOCK";
+      } else if (cmd == "BEEP") {
+        Serial.println("\n[WEB COMMAND] Received REMOTE BEEP test from Dashboard!");
+        beep(120, 3); // 3 audible test chirps
+        showScreen("Buzzer Test", "Beeping Active", "Remote Web Trigger");
+        pendingAckCommand = "BEEP";
       }
     }
 

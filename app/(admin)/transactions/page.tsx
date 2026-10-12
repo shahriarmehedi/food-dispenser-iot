@@ -46,6 +46,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function TransactionsPage() {
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState('');
   const [type, setType] = useState<string>('ALL');
   const [fromDate, setFromDate] = useState('');
@@ -53,7 +54,7 @@ export default function TransactionsPage() {
 
   const queryParams = new URLSearchParams();
   queryParams.set('page', page.toString());
-  queryParams.set('limit', '15');
+  queryParams.set('limit', limit.toString());
   if (search) queryParams.set('search', search);
   if (type !== 'ALL') queryParams.set('type', type);
   if (fromDate) queryParams.set('from', fromDate);
@@ -65,7 +66,10 @@ export default function TransactionsPage() {
   );
 
   const transactions = data?.transactions || [];
+  const totalRecords = data?.total || 0;
   const totalPages = data?.totalPages || 1;
+  const startIndex = (page - 1) * limit;
+  const endIndex = Math.min(startIndex + limit, totalRecords);
 
   function handleExportCsv() {
     const exportParams = new URLSearchParams(queryParams);
@@ -313,27 +317,55 @@ export default function TransactionsPage() {
       </div>
 
       {/* Pagination Controls */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between bg-[#0f1420]/80 p-3 sm:p-4 rounded-3xl border border-[#1b2235] text-xs text-slate-400">
-          <div>
-            Page <span className="text-slate-200 font-medium">{page}</span> of <span className="text-slate-200 font-medium">{totalPages}</span>
+      {totalRecords > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#0f1420]/80 p-3 sm:p-4 rounded-3xl border border-[#1b2235] text-xs text-slate-400">
+          <div className="text-[11px] sm:text-xs">
+            Showing <span className="text-slate-200 font-medium font-mono">{startIndex + 1}</span> to{' '}
+            <span className="text-slate-200 font-medium font-mono">{endIndex}</span> of{' '}
+            <span className="text-slate-200 font-medium font-mono">{totalRecords}</span> entries
           </div>
 
-          <div className="flex items-center space-x-2">
-            <button
-              disabled={page <= 1}
-              onClick={() => setPage(page - 1)}
-              className="p-2 rounded-2xl border border-[#1b2235] bg-[#090c13] hover:bg-[#151b2a] text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-smooth"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              disabled={page >= totalPages}
-              onClick={() => setPage(page + 1)}
-              className="p-2 rounded-2xl border border-[#1b2235] bg-[#090c13] hover:bg-[#151b2a] text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-smooth"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
+          <div className="flex items-center space-x-3 sm:space-x-4">
+            <div className="flex items-center space-x-1.5 text-[11px]">
+              <span className="text-slate-400">Rows:</span>
+              <select
+                value={limit}
+                onChange={(e) => {
+                  setLimit(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="bg-[#151b2a] border border-[#222a42] text-slate-200 rounded-xl px-2 py-1 text-xs font-mono focus:outline-none focus:border-sky-500 cursor-pointer"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+
+            <div className="flex items-center space-x-1">
+              <button
+                disabled={page <= 1}
+                onClick={() => setPage(page - 1)}
+                className="p-1.5 rounded-xl border border-[#222a42] bg-[#151b2a] text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#1a2235] transition-colors active:scale-[0.98]"
+                title="Previous page"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+
+              <span className="px-2 text-[11px] font-mono text-slate-300">
+                {page} / {totalPages}
+              </span>
+
+              <button
+                disabled={page >= totalPages}
+                onClick={() => setPage(page + 1)}
+                className="p-1.5 rounded-xl border border-[#222a42] bg-[#151b2a] text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#1a2235] transition-colors active:scale-[0.98]"
+                title="Next page"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -7,15 +7,15 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => null);
 
-    if (!body || (body.action !== 'LOCK' && body.action !== 'UNLOCK')) {
+    if (!body || (body.action !== 'LOCK' && body.action !== 'UNLOCK' && body.action !== 'BEEP')) {
       return NextResponse.json(
-        { error: 'Invalid action. Must be "LOCK" or "UNLOCK"' },
+        { error: 'Invalid action. Must be "LOCK", "UNLOCK", or "BEEP"' },
         { status: 400 }
       );
     }
 
     const command = {
-      action: body.action as 'LOCK' | 'UNLOCK',
+      action: body.action as 'LOCK' | 'UNLOCK' | 'BEEP',
       requestedAt: Date.now(),
       id: Math.random().toString(36).substring(2, 9),
     };

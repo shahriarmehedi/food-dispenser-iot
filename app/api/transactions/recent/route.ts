@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const transactions = await prisma.transaction.findMany({
-      take: 10,
+      take: 100,
       orderBy: { createdAt: 'desc' },
       include: {
         student: {

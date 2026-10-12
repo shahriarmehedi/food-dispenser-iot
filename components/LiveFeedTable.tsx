@@ -1,9 +1,17 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import useSWR from 'swr';
 import { formatBDT, formatWeight } from '@/lib/utils';
-import { RefreshCw, ArrowDownRight, ArrowUpRight, Scale, CreditCard } from 'lucide-react';
+import {
+  RefreshCw,
+  ArrowDownRight,
+  ArrowUpRight,
+  Scale,
+  CreditCard,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 
 interface RecentTransaction {
   id: string;
@@ -28,6 +36,9 @@ interface RecentApiResponse {
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function LiveFeedTable() {
+  const [rowsPerPage, setRowsPerPage] = useState<number>(5);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
   const { data, isLoading, isValidating } = useSWR<RecentApiResponse>(
     '/api/transactions/recent',
     fetcher,
@@ -38,6 +49,14 @@ export default function LiveFeedTable() {
   );
 
   const transactions = data?.transactions || [];
+  const totalRecords = transactions.length;
+  const totalPages = Math.max(1, Math.ceil(totalRecords / rowsPerPage));
+
+  // Ensure current page is valid when total items change
+  const activePage = Math.min(currentPage, totalPages);
+  const startIndex = (activePage - 1) * rowsPerPage;
+  const endIndex = Math.min(startIndex + rowsPerPage, totalRecords);
+  const paginatedTransactions = transactions.slice(startIndex, endIndex);
 
   return (
     <div className="rounded-3xl border border-[#1b2235] bg-[#0f1420]/80 overflow-hidden shadow-card-subtle backdrop-blur-sm">
@@ -73,7 +92,7 @@ export default function LiveFeedTable() {
 
       {/* MOBILE CARD VIEW (< md screens) */}
       <div className="md:hidden divide-y divide-[#1b2235]/60">
-        {transactions.map((tx) => {
+        {paginatedTransactions.map((tx) => {
           const isPurchase = tx.type === 'DISPENSER_PURCHASE';
           const isRecharge = tx.type === 'ADMIN_RECHARGE';
 
@@ -98,31 +117,33 @@ export default function LiveFeedTable() {
               </div>
 
               <div className="flex items-center justify-between text-[11px] pt-1">
-                <div className="text-slate-400 flex items-center space-x-1">
-                  {isPurchase && tx.weightTakenGrams !== null && (
-                    <>
-                      <Scale className="w-3 h-3 text-sky-400" />
-                      <span>{formatWeight(tx.weightTakenGrams)}</span>
-                    </>
-                  )}
-                  {isRecharge && (
-                    <span className="text-emerald-400">Top-Up Credit</span>
+                <div className="text-slate-400">
+                  {isPurchase ? (
+                    <span className="flex items-center space-x-1">
+                      <Scale className="w-3.5 h-3.5 text-sky-400" />
+                      <span>{formatWeight(tx.weightTakenGrams ?? 0)}</span>
+                    </span>
+                  ) : (
+                    <span className="text-emerald-400">Recharge</span>
                   )}
                 </div>
-
-                <span className="text-[10px] text-slate-500">
-                  {new Date(tx.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                </span>
+                <div className="text-slate-500 text-[10px]">
+                  {new Date(tx.createdAt).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                  })}
+                </div>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* DESKTOP TABLE VIEW (md+ screens) */}
+      {/* DESKTOP TABLE VIEW (>= md screens) */}
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-left text-xs text-slate-300">
-          <thead className="bg-[#090c13]/80 text-[11px] text-slate-400 font-medium border-b border-[#1b2235]">
+          <thead className="bg-[#151b2a]/40 text-slate-400 uppercase text-[10px] tracking-wider border-b border-[#1b2235]">
             <tr>
               <th scope="col" className="px-5 py-3.5 font-medium">Timestamp</th>
               <th scope="col" className="px-5 py-3.5 font-medium">Student Name</th>
@@ -134,7 +155,7 @@ export default function LiveFeedTable() {
             </tr>
           </thead>
           <tbody className="divide-y divide-[#1b2235]/60 font-sans">
-            {transactions.map((tx) => {
+            {paginatedTransactions.map((tx) => {
               const isPurchase = tx.type === 'DISPENSER_PURCHASE';
               const isRecharge = tx.type === 'ADMIN_RECHARGE';
               const isZeroWeight =
@@ -215,6 +236,64 @@ export default function LiveFeedTable() {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Toolbar */}
+      {totalRecords > 0 && (
+        <div className="p-3 sm:p-4 border-t border-[#1b2235] bg-[#090c13]/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+          {/* Left: Summary */}
+          <div className="text-[11px] sm:text-xs">
+            Showing <span className="text-slate-200 font-medium font-mono">{startIndex + 1}</span> to{' '}
+            <span className="text-slate-200 font-medium font-mono">{endIndex}</span> of{' '}
+            <span className="text-slate-200 font-medium font-mono">{totalRecords}</span> entries
+          </div>
+
+          {/* Right: Rows per page + Page Navigation */}
+          <div className="flex items-center space-x-3 sm:space-x-4">
+            <div className="flex items-center space-x-1.5 text-[11px]">
+              <span className="text-slate-400">Rows:</span>
+              <select
+                value={rowsPerPage}
+                onChange={(e) => {
+                  setRowsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="bg-[#151b2a] border border-[#222a42] text-slate-200 rounded-xl px-2 py-1 text-xs font-mono focus:outline-none focus:border-sky-500 cursor-pointer"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+
+            <div className="flex items-center space-x-1">
+              <button
+                type="button"
+                disabled={activePage <= 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                className="p-1.5 rounded-xl border border-[#222a42] bg-[#151b2a] text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#1a2235] transition-colors active:scale-[0.98]"
+                title="Previous page"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+
+              <span className="px-2 text-[11px] font-mono text-slate-300">
+                {activePage} / {totalPages}
+              </span>
+
+              <button
+                type="button"
+                disabled={activePage >= totalPages}
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                className="p-1.5 rounded-xl border border-[#222a42] bg-[#151b2a] text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#1a2235] transition-colors active:scale-[0.98]"
+                title="Next page"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
