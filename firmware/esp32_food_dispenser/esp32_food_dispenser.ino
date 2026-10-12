@@ -383,6 +383,7 @@ void setup() {
 
   // Pin Modes
   pinMode(BUZZER_PIN, OUTPUT);
+  digitalWrite(BUZZER_PIN, LOW); // Ensure silent on boot
   pinMode(LID_SWITCH_PIN, INPUT_PULLUP);
 
   // Initialize Servo Motor
