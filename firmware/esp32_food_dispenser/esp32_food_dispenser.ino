@@ -109,9 +109,14 @@ String pendingAckCommand = "";
 // 5. HELPER FUNCTIONS: HARDWARE CONTROL & DISPLAY
 // -------------------------------------------------------------------------------------
 void beep(int durationMs, int count = 1) {
-  for (int i = 0; i < count; i++) {
-    digitalWrite(BUZZER_PIN, HIGH);
-    delay(durationMs);
+  for (int c = 0; c < count; c++) {
+    unsigned long start = millis();
+    while (millis() - start < (unsigned long)durationMs) {
+      digitalWrite(BUZZER_PIN, HIGH);
+      delayMicroseconds(250); // 2,000 Hz audio frequency modulation
+      digitalWrite(BUZZER_PIN, LOW);
+      delayMicroseconds(250);
+    }
     digitalWrite(BUZZER_PIN, LOW);
     if (count > 1) delay(80);
   }
