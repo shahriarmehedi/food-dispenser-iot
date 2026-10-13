@@ -27,7 +27,6 @@
 #include <SPI.h>
 #include <MFRC522.h>
 #include <HX711.h>
-#include <ESP32Servo.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
@@ -47,13 +46,9 @@
 #define HX711_SCK_PIN   4   // Clock pin
 
 // Actuators & Sensors
-#define SERVO_PIN       2   // PWM pin to Servo Motor signal wire (Orange/Yellow)
-#define LID_SWITCH_PIN  17  // Limit Switch / Reed Switch (INPUT_PULLUP: LOW = Closed, HIGH = Open)
-#define BUZZER_PIN      15  // Active Buzzer / Feedback Beeper
-
-// Servo Position Angles (Adjust to match your dispenser mechanical latch)
-const int SERVO_LOCKED_ANGLE   = 0;   // 0 degrees = Latch Locked
-const int SERVO_UNLOCKED_ANGLE = 90;  // 90 degrees = Latch Open
+#define SOLENOID_LOCK_PIN 2 // Solenoid Lock / Relay Trigger pin (GPIO 2, also controls onboard blue LED)
+#define LID_SWITCH_PIN    17 // Limit Switch / Reed Switch (INPUT_PULLUP: LOW = Closed, HIGH = Open)
+#define BUZZER_PIN        15 // Active Buzzer / Feedback Beeper
 
 // OLED Display (I2C)
 #define SCREEN_WIDTH    128
@@ -80,7 +75,6 @@ float CALIBRATION_FACTOR = -420.0;
 // -------------------------------------------------------------------------------------
 MFRC522 rfid(SS_PIN, RST_PIN);
 HX711 scale;
-Servo dispenserServo;
 
 enum DispenserState {
   STATE_IDLE_WAIT_CARD,
@@ -126,16 +120,16 @@ bool isLidCurrentlyLocked = false;
 
 void lockLid() {
   if (!isLidCurrentlyLocked) {
-    dispenserServo.write(SERVO_LOCKED_ANGLE);
-    Serial.printf("[SERVO] Latch LOCKED (%d deg)\n", SERVO_LOCKED_ANGLE);
+    digitalWrite(SOLENOID_LOCK_PIN, LOW); // Solenoid de-energized -> Latch locked (Blue LED OFF)
+    Serial.println("[LOCK] Solenoid LOCKED (GPIO 2 LOW)");
     isLidCurrentlyLocked = true;
   }
 }
 
 void unlockLid() {
   if (isLidCurrentlyLocked) {
-    dispenserServo.write(SERVO_UNLOCKED_ANGLE);
-    Serial.printf("[SERVO] Latch UNLOCKED (%d deg)\n", SERVO_UNLOCKED_ANGLE);
+    digitalWrite(SOLENOID_LOCK_PIN, HIGH); // Solenoid energized -> Latch pulled in / unlocked (Blue LED ON)
+    Serial.println("[LOCK] Solenoid UNLOCKED (GPIO 2 HIGH)");
     isLidCurrentlyLocked = false;
   }
 }
@@ -388,7 +382,7 @@ void setup() {
   Serial.begin(115200);
   delay(1000);
   Serial.println("\n\n=======================================================");
-  Serial.println("  Smart Food Dispenser IoT Client Initializing (Servo)...");
+  Serial.println("  Smart Food Dispenser IoT Client Initializing (Solenoid Lock)...");
   Serial.println("=======================================================");
 
   // Pin Modes
@@ -396,13 +390,8 @@ void setup() {
   digitalWrite(BUZZER_PIN, LOW); // Ensure silent on boot
   pinMode(LID_SWITCH_PIN, INPUT_PULLUP);
 
-  // Initialize Servo Motor
-  ESP32PWM::allocateTimer(0);
-  ESP32PWM::allocateTimer(1);
-  ESP32PWM::allocateTimer(2);
-  ESP32PWM::allocateTimer(3);
-  dispenserServo.setPeriodHertz(50); // Standard 50Hz servo
-  dispenserServo.attach(SERVO_PIN, 500, 2400); // Standard pulse width for SG90 / MG995
+  // Initialize Solenoid Lock (GPIO 2, drives relay & onboard blue LED)
+  pinMode(SOLENOID_LOCK_PIN, OUTPUT);
   lockLid();
 
   // Initialize I2C OLED Display
