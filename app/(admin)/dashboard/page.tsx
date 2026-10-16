@@ -207,17 +207,29 @@ export default function DashboardPage() {
           latestTransaction={latestTx}
         />
 
+        {/* Mobile / Tablet Controls & ESP32 Telemetry */}
+        <div className="xl:hidden">
+          <RightPanel
+            activeStudentsCount={stats?.activeStudentsCount ?? 0}
+            deviceStatus={stats?.deviceStatus}
+            onOpenRecharge={() => setIsRechargeOpen(true)}
+            onOpenEnroll={() => setIsAddStudentOpen(true)}
+          />
+        </div>
+
         {/* Live Feed Real-Time Table */}
         <LiveFeedTable />
       </div>
 
-      {/* Right Companion Panel */}
-      <RightPanel
-        activeStudentsCount={stats?.activeStudentsCount ?? 0}
-        deviceStatus={stats?.deviceStatus}
-        onOpenRecharge={() => setIsRechargeOpen(true)}
-        onOpenEnroll={() => setIsAddStudentOpen(true)}
-      />
+      {/* Desktop Right Companion Panel */}
+      <div className="hidden xl:block">
+        <RightPanel
+          activeStudentsCount={stats?.activeStudentsCount ?? 0}
+          deviceStatus={stats?.deviceStatus}
+          onOpenRecharge={() => setIsRechargeOpen(true)}
+          onOpenEnroll={() => setIsAddStudentOpen(true)}
+        />
+      </div>
 
       {/* Modals */}
       <AddStudentModal

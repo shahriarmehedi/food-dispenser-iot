@@ -45,20 +45,20 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="h-16 border-b border-[#1b2235] bg-[#090c13]/90 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30">
+      <header className="h-16 border-b border-[#1b2235] bg-[#090c13]/90 backdrop-blur-md px-3 sm:px-6 flex items-center justify-between sticky top-0 z-30">
         {/* Left: Mobile Brand & Terminal status pill */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
           {/* Mobile hamburger menu toggle */}
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="lg:hidden p-2 rounded-2xl bg-[#151b2a] border border-[#222a42] text-slate-400 hover:text-slate-200 transition-smooth"
+            className="lg:hidden p-2 rounded-2xl bg-[#151b2a] border border-[#222a42] text-slate-400 hover:text-slate-200 transition-smooth shrink-0"
             title="Open navigation menu"
           >
             <Menu className="w-4 h-4" />
           </button>
 
           {/* Mobile Brand Icon (shown only when sidebar is hidden) */}
-          <div className="lg:hidden flex items-center space-x-2">
+          <div className="lg:hidden flex items-center space-x-2 shrink-0">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#0084ff] to-[#38bdf8] flex items-center justify-center text-white shadow-sky-pill shrink-0">
               <Cpu className="w-4 h-4" />
             </div>
@@ -67,7 +67,7 @@ export default function Navbar() {
 
           {/* Status pill */}
           <div
-            className="flex items-center space-x-2 px-2.5 sm:px-3 py-1.5 rounded-full bg-[#151b2a] border border-[#222a42] text-[11px] sm:text-xs"
+            className="flex items-center space-x-1.5 sm:space-x-2 px-2 sm:px-3 py-1.5 rounded-full bg-[#151b2a] border border-[#222a42] text-[10px] sm:text-xs shrink-0"
             title={
               isEsp32Online
                 ? `ESP32 Connected: IP ${pingData?.telemetry?.ip || 'Active'}, RSSI: ${pingData?.telemetry?.rssi ? pingData.telemetry.rssi + ' dBm' : 'Good'}`
@@ -118,10 +118,10 @@ export default function Navbar() {
         </div>
 
         {/* Right side controls */}
-        <div className="flex items-center space-x-2 sm:space-x-3">
+        <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
           <Link
             href="/manual"
-            className="flex items-center space-x-1.5 sm:space-x-2 text-xs text-sky-400 hover:text-sky-300 bg-[#151b2a] hover:bg-[#1b2235] px-3 sm:px-3.5 py-1.5 rounded-full border border-sky-500/30 transition-smooth"
+            className="flex items-center space-x-1.5 sm:space-x-2 text-xs text-sky-400 hover:text-sky-300 bg-[#151b2a] hover:bg-[#1b2235] px-2.5 sm:px-3.5 py-1.5 rounded-full border border-sky-500/30 transition-smooth"
           >
             <BookOpen className="w-3.5 h-3.5 text-sky-400 shrink-0" />
             <span className="font-medium hidden sm:inline">System Manual</span>

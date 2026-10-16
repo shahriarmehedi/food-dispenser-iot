@@ -53,13 +53,13 @@ export default function HopperLevelCard({
 
         <div>
           {/* Card Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2.5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center space-x-2.5 min-w-0">
               <div className="w-8 h-8 rounded-2xl bg-[#151b2a] border border-[#222a42] flex items-center justify-center text-sky-400 shrink-0">
                 <Package className="w-4 h-4" />
               </div>
-              <div>
-                <h3 className="text-xs sm:text-sm font-medium text-slate-100 flex items-center gap-2">
+              <div className="min-w-0">
+                <h3 className="text-xs sm:text-sm font-medium text-slate-100 flex flex-wrap items-center gap-1.5 sm:gap-2">
                   <span>Food Tank Capacity</span>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#151b2a] border border-[#222a42] text-slate-400 font-mono">
                     1kg Load Cell
@@ -73,7 +73,7 @@ export default function HopperLevelCard({
 
             {/* Status Pill */}
             <span
-              className={`text-[10px] px-2.5 py-1 rounded-full border font-mono font-medium flex items-center space-x-1 ${
+              className={`text-[10px] px-2.5 py-1 rounded-full border font-mono font-medium flex items-center space-x-1 self-start sm:self-auto shrink-0 ${
                 isCritical
                   ? 'bg-rose-950/80 text-rose-300 border-rose-800/50'
                   : isLow
@@ -102,7 +102,7 @@ export default function HopperLevelCard({
 
           {/* Level Numbers & Progress Bar */}
           <div className="mt-5 space-y-2">
-            <div className="flex items-baseline justify-between">
+            <div className="flex flex-wrap items-baseline justify-between gap-1">
               <div>
                 <span className="text-2xl sm:text-3xl font-medium text-slate-100 tracking-tight">
                   {remainingGrams.toFixed(1)}
@@ -112,7 +112,7 @@ export default function HopperLevelCard({
                   remaining of {capacityGrams}g max
                 </span>
               </div>
-              <span className="text-sm font-mono font-medium text-slate-300">
+              <span className="text-xs sm:text-sm font-mono font-medium text-slate-300">
                 {percentage}% Full
               </span>
             </div>
@@ -134,18 +134,18 @@ export default function HopperLevelCard({
         </div>
 
         {/* Footer Metrics Row */}
-        <div className="mt-5 pt-3 border-t border-[#1b2235] grid grid-cols-3 gap-2 text-center text-xs">
-          <div className="p-2 rounded-xl bg-[#090c13]/60 border border-[#1b2235]">
-            <span className="text-[10px] text-slate-400 block font-light">Max Capacity</span>
-            <span className="text-slate-200 font-mono font-medium">1,000 g</span>
+        <div className="mt-5 pt-3 border-t border-[#1b2235] grid grid-cols-3 gap-1.5 sm:gap-2 text-center text-xs">
+          <div className="p-1.5 sm:p-2 rounded-xl bg-[#090c13]/60 border border-[#1b2235]">
+            <span className="text-[9px] sm:text-[10px] text-slate-400 block font-light">Max Capacity</span>
+            <span className="text-slate-200 font-mono font-medium text-[11px] sm:text-xs">1,000 g</span>
           </div>
-          <div className="p-2 rounded-xl bg-[#090c13]/60 border border-[#1b2235]">
-            <span className="text-[10px] text-slate-400 block font-light">Dispensed Today</span>
-            <span className="text-sky-300 font-mono font-medium">{formatWeight(dispensedTodayGrams)}</span>
+          <div className="p-1.5 sm:p-2 rounded-xl bg-[#090c13]/60 border border-[#1b2235]">
+            <span className="text-[9px] sm:text-[10px] text-slate-400 block font-light">Dispensed Today</span>
+            <span className="text-sky-300 font-mono font-medium text-[11px] sm:text-xs">{formatWeight(dispensedTodayGrams)}</span>
           </div>
-          <div className="p-2 rounded-xl bg-[#090c13]/60 border border-[#1b2235]">
-            <span className="text-[10px] text-slate-400 block font-light">Refill Trigger</span>
-            <span className="text-amber-300 font-mono font-medium">&lt; 150 g</span>
+          <div className="p-1.5 sm:p-2 rounded-xl bg-[#090c13]/60 border border-[#1b2235]">
+            <span className="text-[9px] sm:text-[10px] text-slate-400 block font-light">Refill Trigger</span>
+            <span className="text-amber-300 font-mono font-medium text-[11px] sm:text-xs">&lt; 150 g</span>
           </div>
         </div>
       </div>

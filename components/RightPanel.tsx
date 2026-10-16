@@ -78,7 +78,7 @@ export default function RightPanel({
   }
 
   return (
-    <aside className="w-80 shrink-0 space-y-4 hidden xl:block">
+    <aside className="w-full xl:w-80 shrink-0 space-y-4">
       {/* Quick Terminal Operations */}
       <div className="rounded-3xl border border-[#1b2235] bg-[#0f1420]/80 p-4 shadow-card-subtle backdrop-blur-sm space-y-2.5">
         <div className="flex items-center justify-between px-1">
@@ -89,7 +89,7 @@ export default function RightPanel({
           <span className="text-[10px] text-slate-500 font-mono">Operations</span>
         </div>
 
-        <div className="grid grid-cols-1 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-2">
           <button
             onClick={onOpenEnroll}
             className="w-full py-2.5 px-3.5 rounded-2xl bg-[#0084ff] hover:bg-[#0074e0] text-white text-xs font-medium flex items-center justify-between shadow-sky-pill transition-smooth active:scale-[0.98]"
@@ -115,7 +115,7 @@ export default function RightPanel({
       </div>
 
       {/* Hardware Telemetry Card */}
-      <div className="rounded-3xl border border-[#1b2235] bg-[#0f1420]/80 p-5 shadow-card-subtle backdrop-blur-sm space-y-4">
+      <div className="rounded-3xl border border-[#1b2235] bg-[#0f1420]/80 p-4 sm:p-5 shadow-card-subtle backdrop-blur-sm space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <span className="relative flex h-2 w-2">
@@ -143,7 +143,7 @@ export default function RightPanel({
           </span>
         </div>
 
-        <div className="space-y-2 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-2 text-xs">
           {/* IP and Signal */}
           <div className="flex items-center justify-between p-2.5 rounded-2xl bg-[#090c13]/70 border border-[#1b2235]">
             <span className="text-slate-400">Device IP / Signal:</span>
@@ -201,13 +201,13 @@ export default function RightPanel({
           </div>
 
           {/* Enrolled Students */}
-          <div className="flex items-center justify-between p-2.5 rounded-2xl bg-[#090c13]/70 border border-[#1b2235]">
+          <div className="flex items-center justify-between p-2.5 rounded-2xl bg-[#090c13]/70 border border-[#1b2235] sm:col-span-2 xl:col-span-1">
             <span className="text-slate-400">Active Students:</span>
             <span className="text-sky-400 font-medium">{activeStudentsCount} enrolled</span>
           </div>
 
           {/* Latch Status & Remote Web Control */}
-          <div className="p-3 rounded-2xl bg-[#090c13] border border-[#1b2235] space-y-2.5">
+          <div className="p-3 rounded-2xl bg-[#090c13] border border-[#1b2235] space-y-2.5 sm:col-span-2 xl:col-span-1">
             <div className="flex items-center justify-between">
               <span className="text-slate-300 font-medium text-xs flex items-center gap-1.5">
                 {!isLocked ? (
@@ -234,7 +234,7 @@ export default function RightPanel({
                 type="button"
                 disabled={commandLoading || !isOnline}
                 onClick={() => handleToggleLatch('UNLOCK')}
-                className="py-1.5 px-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-medium flex items-center justify-center space-x-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
+                className="py-2 px-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] sm:text-xs font-medium flex items-center justify-center space-x-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
                 title="Send remote command to unlock the food dispenser lid"
               >
                 {commandLoading ? (
@@ -249,7 +249,7 @@ export default function RightPanel({
                 type="button"
                 disabled={commandLoading || !isOnline}
                 onClick={() => handleToggleLatch('LOCK')}
-                className="py-1.5 px-2.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/30 text-[11px] font-medium flex items-center justify-center space-x-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
+                className="py-2 px-2.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/30 text-[11px] sm:text-xs font-medium flex items-center justify-center space-x-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
                 title="Send remote command to lock the food dispenser lid"
               >
                 {commandLoading ? (
@@ -266,7 +266,7 @@ export default function RightPanel({
               type="button"
               disabled={commandLoading || !isOnline}
               onClick={() => handleToggleLatch('BEEP')}
-              className="w-full py-1.5 px-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[11px] font-medium flex items-center justify-center space-x-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
+              className="w-full py-2 px-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[11px] sm:text-xs font-medium flex items-center justify-center space-x-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
               title="Test buzzer by playing 3 chirps on ESP32"
             >
               {commandLoading ? (
