@@ -98,6 +98,7 @@ unsigned long maxDispenseTimeoutMs = 30000; // Auto-lock timeout in ms (default 
 unsigned long lastHeartbeatTime = 0;
 const unsigned long HEARTBEAT_INTERVAL_MS = 5000; // Ping cloud every 5s for live ONLINE status & remote commands
 String pendingAckCommand = "";
+bool isRegistrationMode = false; // Registration mode: when true, tapping a card sends UID to web for enrollment prompt
 
 // -------------------------------------------------------------------------------------
 // 5. HELPER FUNCTIONS: HARDWARE CONTROL & DISPLAY
@@ -273,6 +274,53 @@ bool apiCheckoutFood(String cardUid, float weightTakenGrams, float &outCharged, 
 }
 
 // -------------------------------------------------------------------------------------
+// Register Card in Registration Mode: Sends tapped card UID to Cloud Gateway
+bool apiRegisterScannedCard(String cardUid) {
+  if (WiFi.status() != WL_CONNECTED) return false;
+
+  WiFiClientSecure client;
+  client.setInsecure();
+
+  HTTPClient https;
+  String url = String(SERVER_BASE) + "/api/dispenser/register-card";
+  https.begin(client, url);
+  https.addHeader("Content-Type", "application/json");
+
+  StaticJsonDocument<128> doc;
+  doc["cardUid"] = cardUid;
+  String requestBody;
+  serializeJson(doc, requestBody);
+
+  Serial.println("[API] POST /api/dispenser/register-card: UID=" + cardUid);
+  int httpCode = https.POST(requestBody);
+  bool success = false;
+
+  if (httpCode > 0) {
+    String response = https.getString();
+    Serial.printf("[API] Register Card Code: %d | Body: %s\n", httpCode, response.c_str());
+
+    StaticJsonDocument<384> resDoc;
+    deserializeJson(resDoc, response);
+    success = resDoc["success"] | false;
+    bool alreadyRegistered = resDoc["alreadyRegistered"] | false;
+
+    if (alreadyRegistered) {
+      String studentName = resDoc["studentName"] | "Student";
+      beep(180, 1);
+      showScreen("Already Enrolled", studentName, "UID: " + cardUid);
+    } else {
+      beep(120, 2); // 2 happy chirps confirming card detection
+      showScreen("Card Captured!", "UID: " + cardUid, "Fill form on Web");
+    }
+  } else {
+    Serial.printf("[API] Register Connection Error: %s\n", https.errorToString(httpCode).c_str());
+  }
+
+  https.end();
+  return success;
+}
+
+// -------------------------------------------------------------------------------------
 // Helper to probe if HX711 hardware is actually connected
 bool isHX711Connected() {
   pinMode(HX711_SCK_PIN, OUTPUT);
@@ -337,7 +385,23 @@ void apiSendHeartbeat() {
       }
     }
 
-    // 2. Remote Web Commands (Unlock / Lock from Web Dashboard)
+    // 2. Synchronize Registration Mode state from Dashboard
+    if (resDoc.containsKey("registrationMode")) {
+      bool serverRegMode = resDoc["registrationMode"].as<bool>();
+      if (serverRegMode && !isRegistrationMode) {
+        isRegistrationMode = true;
+        Serial.println("\n[REGISTRATION] >>> REGISTRATION MODE ACTIVATED <<<");
+        beep(100, 3); // 3 audible beeps in a row to notify lab advisor!
+        showScreen("Registration Mode", "Tap New RFID Card", "Awaiting Card...");
+      } else if (!serverRegMode && isRegistrationMode) {
+        isRegistrationMode = false;
+        Serial.println("\n[REGISTRATION] >>> REGISTRATION MODE DEACTIVATED <<<");
+        beep(200, 1);
+        showScreen("Ready to Serve!", "Tap RFID Card", "Scale: 0.00g");
+      }
+    }
+
+    // 3. Remote Web Commands (Unlock / Lock / Beep / Registration from Web Dashboard)
     if (resDoc.containsKey("pendingCommand") && !resDoc["pendingCommand"].isNull()) {
       String cmd = resDoc["pendingCommand"].as<String>();
       if (cmd == "UNLOCK") {
@@ -360,6 +424,18 @@ void apiSendHeartbeat() {
         beep(120, 3); // 3 audible test chirps
         showScreen("Buzzer Test", "Beeping Active", "Remote Web Trigger");
         pendingAckCommand = "BEEP";
+      } else if (cmd == "START_REGISTRATION") {
+        Serial.println("\n[WEB COMMAND] START REGISTRATION MODE triggered!");
+        isRegistrationMode = true;
+        beep(100, 3); // 3 beeps in a row!
+        showScreen("Registration Mode", "Tap New RFID Card", "Awaiting Card...");
+        pendingAckCommand = "START_REGISTRATION";
+      } else if (cmd == "STOP_REGISTRATION") {
+        Serial.println("\n[WEB COMMAND] STOP REGISTRATION MODE triggered!");
+        isRegistrationMode = false;
+        beep(200, 1);
+        showScreen("Ready to Serve!", "Tap RFID Card", "Normal Vending");
+        pendingAckCommand = "STOP_REGISTRATION";
       }
     }
 
@@ -498,8 +574,19 @@ void loop() {
 
       Serial.println("\n-------------------------------------------------------");
       Serial.println("[CARD DETECTED] Scanned UID: " + activeCardUid);
-      beep(80, 1); // Single tap chirp
 
+      // If in Registration Mode, send UID to Cloud Gateway for Web Registration Prompt
+      if (isRegistrationMode) {
+        Serial.println("[REGISTRATION] Card captured in Registration Mode! Sending to Web Portal...");
+        showScreen("Card Detected!", "UID: " + activeCardUid, "Sending to Web...");
+        apiRegisterScannedCard(activeCardUid);
+        delay(1200);
+        showScreen("Registration Mode", "Tap Another Card", "Or Exit on Web");
+        currentState = STATE_IDLE_WAIT_CARD;
+        break;
+      }
+
+      beep(80, 1); // Single tap chirp
       currentState = STATE_AUTHENTICATING;
       break;
     }

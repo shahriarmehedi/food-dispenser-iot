@@ -14,6 +14,8 @@ import {
   Building,
   Edit,
   Trash2,
+  Radio,
+  Loader2,
 } from 'lucide-react';
 import { formatBDT } from '@/lib/utils';
 import AddStudentModal from '@/components/AddStudentModal';
@@ -39,6 +41,10 @@ export default function StudentsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [enrollingCardUid, setEnrollingCardUid] = useState<string>('');
+  const [isAutoDetected, setIsAutoDetected] = useState<boolean>(false);
+  const [lastAutoOpenedUid, setLastAutoOpenedUid] = useState<string | null>(null);
+  const [regLoading, setRegLoading] = useState(false);
   const [rechargeTarget, setRechargeTarget] = useState<Student | null>(null);
   const [editTarget, setEditTarget] = useState<Student | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Student | null>(null);
@@ -52,6 +58,49 @@ export default function StudentsPage() {
     `/api/students?${queryParams.toString()}`,
     fetcher
   );
+
+  const { data: regData, mutate: mutateReg } = useSWR<{
+    isRegistrationMode: boolean;
+    pendingCard: { cardUid: string; scannedAt: number } | null;
+  }>('/api/dispenser/registration', fetcher, {
+    refreshInterval: 1500,
+    revalidateOnFocus: true,
+  });
+
+  const isRegMode = regData?.isRegistrationMode ?? false;
+
+  // Auto-pop Add Student modal when new card is tapped in Registration Mode
+  React.useEffect(() => {
+    if (
+      regData?.isRegistrationMode &&
+      regData.pendingCard &&
+      regData.pendingCard.cardUid &&
+      regData.pendingCard.cardUid !== lastAutoOpenedUid
+    ) {
+      setEnrollingCardUid(regData.pendingCard.cardUid);
+      setIsAutoDetected(true);
+      setIsAddModalOpen(true);
+      setLastAutoOpenedUid(regData.pendingCard.cardUid);
+    }
+  }, [regData, lastAutoOpenedUid]);
+
+  async function handleToggleRegistration(enable: boolean) {
+    try {
+      setRegLoading(true);
+      const res = await fetch('/api/dispenser/registration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: enable ? 'ENABLE' : 'DISABLE' }),
+      });
+      if (res.ok) {
+        mutateReg();
+      }
+    } catch (err) {
+      console.error('Error toggling registration mode:', err);
+    } finally {
+      setRegLoading(false);
+    }
+  }
 
   const students = data?.students || [];
 
@@ -86,14 +135,61 @@ export default function StudentsPage() {
             Manage canteen credentials, assign RFID physical cards, and top up account balances.
           </p>
         </div>
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="flex items-center justify-center space-x-2 px-4 py-2.5 rounded-full bg-[#0084ff] hover:bg-[#0074e0] text-white text-xs font-medium shadow-sky-pill transition-smooth active:scale-[0.98] w-full sm:w-auto"
-        >
-          <UserPlus className="w-3.5 h-3.5" />
-          <span>Enroll New Student</span>
-        </button>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+          <button
+            onClick={() => handleToggleRegistration(!isRegMode)}
+            disabled={regLoading}
+            className={`flex items-center justify-center space-x-2 px-4 py-2.5 rounded-full text-xs font-medium border transition-smooth active:scale-[0.98] ${
+              isRegMode
+                ? 'bg-amber-500/15 text-amber-300 border-amber-500/30 hover:bg-amber-500/25'
+                : 'bg-[#151b2a] text-slate-300 border-[#222a42] hover:bg-[#1a2235]'
+            }`}
+          >
+            {regLoading ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Radio className={`w-3.5 h-3.5 ${isRegMode ? 'text-amber-400 animate-pulse' : 'text-slate-400'}`} />
+            )}
+            <span>{isRegMode ? 'Registration Mode: ON' : 'Turn ON Registration'}</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setEnrollingCardUid('');
+              setIsAutoDetected(false);
+              setIsAddModalOpen(true);
+            }}
+            className="flex items-center justify-center space-x-2 px-4 py-2.5 rounded-full bg-[#0084ff] hover:bg-[#0074e0] text-white text-xs font-medium shadow-sky-pill transition-smooth active:scale-[0.98]"
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            <span>Enroll New Student</span>
+          </button>
+        </div>
       </div>
+
+      {/* Registration Mode Alert Banner */}
+      {isRegMode && (
+        <div className="p-3 sm:p-4 rounded-3xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-300">
+          <div className="flex items-center space-x-2.5">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+            </span>
+            <div>
+              <span className="font-medium">Registration Mode Active:</span>{' '}
+              <span className="text-amber-200/80 font-light">
+                Tap any RFID card on the reader. Details prompt opens automatically.
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={() => handleToggleRegistration(false)}
+            className="text-[11px] font-medium px-3 py-1 rounded-full bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/40 transition-colors shrink-0"
+          >
+            Turn OFF Mode
+          </button>
+        </div>
+      )}
 
       {/* Filters & Search Toolbar */}
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between bg-[#0f1420]/80 p-3 sm:p-4 rounded-3xl border border-[#1b2235] backdrop-blur-sm">
@@ -350,8 +446,20 @@ export default function StudentsPage() {
       {/* Modals */}
       <AddStudentModal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSuccess={() => mutate()}
+        initialCardUid={enrollingCardUid}
+        autoDetected={isAutoDetected}
+        onClose={() => {
+          setIsAddModalOpen(false);
+          setEnrollingCardUid('');
+          setIsAutoDetected(false);
+        }}
+        onSuccess={() => {
+          mutate();
+          mutateReg();
+          setIsAddModalOpen(false);
+          setEnrollingCardUid('');
+          setIsAutoDetected(false);
+        }}
       />
 
       <EditStudentModal

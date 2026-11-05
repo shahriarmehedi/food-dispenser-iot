@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import useSWR from 'swr';
 import {
   Shield,
   CreditCard,
@@ -18,7 +19,10 @@ import {
   Loader2,
   Zap,
   Volume2,
+  UserPlus,
 } from 'lucide-react';
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 interface DeviceStatus {
   isOnline: boolean;
@@ -32,7 +36,7 @@ interface DeviceStatus {
 
 interface RightPanelProps {
   onOpenRecharge: () => void;
-  onOpenEnroll: () => void;
+  onOpenEnroll: (cardUid?: string) => void;
   activeStudentsCount: number;
   deviceStatus?: DeviceStatus;
 }
@@ -49,6 +53,49 @@ export default function RightPanel({
 
   const [commandLoading, setCommandLoading] = React.useState(false);
   const [commandMessage, setCommandMessage] = React.useState<string | null>(null);
+  const [regLoading, setRegLoading] = React.useState(false);
+
+  const { data: regData, mutate: mutateReg } = useSWR<{
+    isRegistrationMode: boolean;
+    pendingCard: { cardUid: string; scannedAt: number } | null;
+  }>('/api/dispenser/registration', fetcher, {
+    refreshInterval: 1500,
+    revalidateOnFocus: true,
+  });
+
+  const isRegMode = regData?.isRegistrationMode ?? false;
+  const pendingCard = regData?.pendingCard;
+
+  async function handleToggleRegistration(enable: boolean) {
+    try {
+      setRegLoading(true);
+      const res = await fetch('/api/dispenser/registration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: enable ? 'ENABLE' : 'DISABLE' }),
+      });
+      if (res.ok) {
+        mutateReg();
+      }
+    } catch (err) {
+      console.error('Error toggling registration mode:', err);
+    } finally {
+      setRegLoading(false);
+    }
+  }
+
+  async function handleClearPendingCard() {
+    try {
+      await fetch('/api/dispenser/registration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'CLEAR_PENDING' }),
+      });
+      mutateReg();
+    } catch (err) {
+      console.error('Error clearing pending card:', err);
+    }
+  }
 
   async function handleToggleLatch(action: 'LOCK' | 'UNLOCK' | 'BEEP') {
     try {
@@ -79,31 +126,115 @@ export default function RightPanel({
 
   return (
     <aside className="w-full xl:w-80 shrink-0 space-y-4">
-      {/* Quick Terminal Operations */}
-      <div className="rounded-3xl border border-[#1b2235] bg-[#0f1420]/80 p-4 shadow-card-subtle backdrop-blur-sm space-y-2.5">
+      {/* Registration Mode & Terminal Actions */}
+      <div className="rounded-3xl border border-[#1b2235] bg-[#0f1420]/80 p-4 shadow-card-subtle backdrop-blur-sm space-y-3">
         <div className="flex items-center justify-between px-1">
           <span className="text-xs font-medium text-slate-200 flex items-center gap-1.5">
-            <Zap className="w-3.5 h-3.5 text-sky-400" />
-            <span>Terminal Actions</span>
+            <Radio className={`w-3.5 h-3.5 ${isRegMode ? 'text-amber-400 animate-pulse' : 'text-sky-400'}`} />
+            <span>Card Registration Mode</span>
           </span>
-          <span className="text-[10px] text-slate-500 font-mono">Operations</span>
+          <span
+            className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-medium ${
+              isRegMode
+                ? 'bg-amber-950/80 text-amber-300 border border-amber-800/40 animate-pulse'
+                : 'bg-slate-800/80 text-slate-400 border border-slate-700/40'
+            }`}
+          >
+            {isRegMode ? 'ACTIVE' : 'OFF'}
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-2">
+        {/* Dynamic Registration State Banner */}
+        {isRegMode ? (
+          <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2">
+            <div className="flex items-center justify-between text-xs text-amber-300 font-medium">
+              <span className="flex items-center gap-1.5">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                </span>
+                <span>Awaiting Card Tap on ESP32</span>
+              </span>
+              <span className="text-[10px] font-mono text-amber-400/80">3 beeps played</span>
+            </div>
+            <p className="text-[11px] text-amber-200/80 font-light leading-tight">
+              Tap any unassigned RFID card on the reader. A registration prompt will appear automatically.
+            </p>
+
+            {pendingCard ? (
+              <div className="mt-2 p-2.5 rounded-xl bg-[#090c13] border border-amber-500/40 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-slate-400 font-light">Detected Card UID</span>
+                  <span className="font-mono text-xs text-amber-300 font-medium bg-amber-950/80 px-2 py-0.5 rounded-md border border-amber-800/50">
+                    {pendingCard.cardUid}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onOpenEnroll(pendingCard.cardUid)}
+                    className="py-1.5 px-2 rounded-xl bg-[#0084ff] hover:bg-[#0074e0] text-white text-xs font-medium flex items-center justify-center space-x-1 shadow-sky-pill transition-smooth active:scale-[0.98]"
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    <span>Enroll Now</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleClearPendingCard}
+                    className="py-1.5 px-2 rounded-xl bg-[#151b2a] hover:bg-[#1a2235] text-slate-400 hover:text-slate-200 border border-[#222a42] text-xs font-medium transition-smooth"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
+            <button
+              type="button"
+              disabled={regLoading}
+              onClick={() => handleToggleRegistration(false)}
+              className="w-full mt-1 py-1.5 px-3 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 text-slate-200 border border-slate-700 text-xs font-medium flex items-center justify-center space-x-1.5 transition-smooth active:scale-[0.98]"
+            >
+              {regLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : null}
+              <span>Turn OFF Registration Mode</span>
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <button
+              type="button"
+              disabled={regLoading}
+              onClick={() => handleToggleRegistration(true)}
+              className="w-full py-2.5 px-3.5 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-medium flex items-center justify-between transition-smooth active:scale-[0.98]"
+            >
+              <div className="flex items-center space-x-2">
+                <Radio className="w-3.5 h-3.5 text-amber-400" />
+                <span>Turn ON Registration Mode</span>
+              </div>
+              <ChevronRight className="w-3.5 h-3.5 text-amber-400/70" />
+            </button>
+            <p className="text-[10px] text-slate-500 font-light px-1">
+              Beeps ESP32 buzzer (3x) and captures any tapped card UID automatically.
+            </p>
+          </div>
+        )}
+
+        {/* Regular Action Buttons */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-2 pt-1 border-t border-[#1b2235]/60">
           <button
-            onClick={onOpenEnroll}
-            className="w-full py-2.5 px-3.5 rounded-2xl bg-[#0084ff] hover:bg-[#0074e0] text-white text-xs font-medium flex items-center justify-between shadow-sky-pill transition-smooth active:scale-[0.98]"
+            onClick={() => onOpenEnroll()}
+            className="w-full py-2 px-3 rounded-2xl bg-[#151b2a] hover:bg-[#1a2235] text-slate-200 border border-[#222a42] text-xs font-medium flex items-center justify-between transition-smooth group active:scale-[0.98]"
           >
             <div className="flex items-center space-x-2">
-              <UserCheck className="w-3.5 h-3.5" />
-              <span>Enroll New RFID Card</span>
+              <UserCheck className="w-3.5 h-3.5 text-sky-400" />
+              <span>Manual Student Enroll</span>
             </div>
-            <ChevronRight className="w-3.5 h-3.5 text-white/70" />
+            <ChevronRight className="w-3.5 h-3.5 text-slate-500 group-hover:translate-x-0.5 transition-transform" />
           </button>
 
           <button
             onClick={onOpenRecharge}
-            className="w-full py-2.5 px-3.5 rounded-2xl bg-[#151b2a] hover:bg-[#1a2235] text-slate-200 border border-[#222a42] text-xs font-medium flex items-center justify-between transition-smooth group active:scale-[0.98]"
+            className="w-full py-2 px-3 rounded-2xl bg-[#151b2a] hover:bg-[#1a2235] text-slate-200 border border-[#222a42] text-xs font-medium flex items-center justify-between transition-smooth group active:scale-[0.98]"
           >
             <div className="flex items-center space-x-2">
               <PlusCircle className="w-3.5 h-3.5 text-emerald-400" />

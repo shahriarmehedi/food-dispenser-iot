@@ -54,6 +54,9 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 export default function DashboardPage() {
   const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
   const [isRechargeOpen, setIsRechargeOpen] = useState(false);
+  const [enrollingCardUid, setEnrollingCardUid] = useState('');
+  const [isAutoDetected, setIsAutoDetected] = useState(false);
+  const [lastAutoOpenedUid, setLastAutoOpenedUid] = useState<string | null>(null);
 
   const { data: stats, mutate, isValidating } = useSWR<StatsResponse>(
     '/api/stats',
@@ -72,6 +75,41 @@ export default function DashboardPage() {
       revalidateOnFocus: true,
     }
   );
+
+  // Poll registration status for auto-opening modal when a card is tapped in Registration Mode
+  const { data: regData, mutate: mutateReg } = useSWR<{
+    isRegistrationMode: boolean;
+    pendingCard: { cardUid: string; scannedAt: number } | null;
+  }>('/api/dispenser/registration', fetcher, {
+    refreshInterval: 1500,
+    revalidateOnFocus: true,
+  });
+
+  // When a new card is tapped in Registration Mode, automatically pop up the registration prompt!
+  React.useEffect(() => {
+    if (
+      regData?.isRegistrationMode &&
+      regData.pendingCard &&
+      regData.pendingCard.cardUid &&
+      regData.pendingCard.cardUid !== lastAutoOpenedUid
+    ) {
+      setEnrollingCardUid(regData.pendingCard.cardUid);
+      setIsAutoDetected(true);
+      setIsAddStudentOpen(true);
+      setLastAutoOpenedUid(regData.pendingCard.cardUid);
+    }
+  }, [regData, lastAutoOpenedUid]);
+
+  function handleOpenEnroll(cardUid?: string) {
+    if (cardUid) {
+      setEnrollingCardUid(cardUid);
+      setIsAutoDetected(true);
+    } else {
+      setEnrollingCardUid('');
+      setIsAutoDetected(false);
+    }
+    setIsAddStudentOpen(true);
+  }
 
   const latestTxRaw = recentData?.transactions?.[0];
   const latestTx = latestTxRaw
@@ -213,7 +251,7 @@ export default function DashboardPage() {
             activeStudentsCount={stats?.activeStudentsCount ?? 0}
             deviceStatus={stats?.deviceStatus}
             onOpenRecharge={() => setIsRechargeOpen(true)}
-            onOpenEnroll={() => setIsAddStudentOpen(true)}
+            onOpenEnroll={handleOpenEnroll}
           />
         </div>
 
@@ -227,15 +265,27 @@ export default function DashboardPage() {
           activeStudentsCount={stats?.activeStudentsCount ?? 0}
           deviceStatus={stats?.deviceStatus}
           onOpenRecharge={() => setIsRechargeOpen(true)}
-          onOpenEnroll={() => setIsAddStudentOpen(true)}
+          onOpenEnroll={handleOpenEnroll}
         />
       </div>
 
       {/* Modals */}
       <AddStudentModal
         isOpen={isAddStudentOpen}
-        onClose={() => setIsAddStudentOpen(false)}
-        onSuccess={() => mutate()}
+        initialCardUid={enrollingCardUid}
+        autoDetected={isAutoDetected}
+        onClose={() => {
+          setIsAddStudentOpen(false);
+          setEnrollingCardUid('');
+          setIsAutoDetected(false);
+        }}
+        onSuccess={() => {
+          mutate();
+          mutateReg();
+          setIsAddStudentOpen(false);
+          setEnrollingCardUid('');
+          setIsAutoDetected(false);
+        }}
       />
 
       <RechargeModal

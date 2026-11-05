@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       timestamp: Date.now(),
     };
 
-    const [, latchTimeoutSeconds, pendingConfig] = await Promise.all([
+    const [, latchTimeoutSeconds, pendingConfig, regModeConfig] = await Promise.all([
       prisma.systemConfig.upsert({
         where: { key: 'ESP32_HEARTBEAT' },
         update: {
@@ -43,6 +43,9 @@ export async function POST(request: NextRequest) {
       prisma.systemConfig.findUnique({
         where: { key: 'ESP32_PENDING_COMMAND' },
       }),
+      prisma.systemConfig.findUnique({
+        where: { key: 'RFID_REGISTRATION_MODE' },
+      }),
     ]);
 
     let pendingCommand: string | null = null;
@@ -57,11 +60,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const isRegistrationMode = regModeConfig?.value === 'true';
+
     return NextResponse.json({
       success: true,
       serverTime: Date.now(),
       latchTimeoutSeconds: Math.round(latchTimeoutSeconds),
       pendingCommand,
+      registrationMode: isRegistrationMode,
     });
   } catch (error) {
     console.error('Heartbeat ping error:', error);
@@ -71,14 +77,19 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const [heartbeatConfig, pendingConfig] = await Promise.all([
+    const [heartbeatConfig, pendingConfig, regModeConfig] = await Promise.all([
       prisma.systemConfig.findUnique({
         where: { key: 'ESP32_HEARTBEAT' },
       }),
       prisma.systemConfig.findUnique({
         where: { key: 'ESP32_PENDING_COMMAND' },
       }),
+      prisma.systemConfig.findUnique({
+        where: { key: 'RFID_REGISTRATION_MODE' },
+      }),
     ]);
+
+    const isRegistrationMode = regModeConfig?.value === 'true';
 
     let pendingCommand: string | null = null;
     if (pendingConfig?.value) {
@@ -97,6 +108,7 @@ export async function GET() {
         isOnline: false,
         message: 'No heartbeat recorded yet',
         pendingCommand,
+        isRegistrationMode,
       });
     }
 
@@ -111,6 +123,7 @@ export async function GET() {
       lastSeenSecondsAgo: Math.max(0, Math.round(elapsedMs / 1000)),
       telemetry,
       pendingCommand,
+      isRegistrationMode,
     });
   } catch (error) {
     console.error('Heartbeat status error:', error);

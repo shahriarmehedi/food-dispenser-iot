@@ -116,6 +116,37 @@ export async function POST(request: NextRequest) {
       return student;
     });
 
+    // Clear pending registration card and trigger audible confirmation beep on ESP32
+    try {
+      await Promise.all([
+        prisma.systemConfig.deleteMany({
+          where: { key: 'RFID_PENDING_CARD' },
+        }),
+        prisma.systemConfig.upsert({
+          where: { key: 'ESP32_PENDING_COMMAND' },
+          update: {
+            value: JSON.stringify({
+              action: 'BEEP',
+              requestedAt: Date.now(),
+              id: Math.random().toString(36).substring(2, 9),
+            }),
+            updatedAt: new Date(),
+          },
+          create: {
+            key: 'ESP32_PENDING_COMMAND',
+            value: JSON.stringify({
+              action: 'BEEP',
+              requestedAt: Date.now(),
+              id: Math.random().toString(36).substring(2, 9),
+            }),
+            description: 'Confirmation beep for student registration',
+          },
+        }),
+      ]);
+    } catch (cleanupErr) {
+      console.warn('Could not clear pending registration or queue beep:', cleanupErr);
+    }
+
     return NextResponse.json(
       {
         success: true,

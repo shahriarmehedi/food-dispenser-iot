@@ -1,23 +1,37 @@
 'use client';
 
-import React, { useState } from 'react';
-import { X, UserPlus, CreditCard, User, Building, DollarSign } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, UserPlus, CreditCard, User, Building, DollarSign, CheckCircle2, Radio } from 'lucide-react';
 import { normalizeCardUid } from '@/lib/utils';
 
 interface AddStudentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  initialCardUid?: string;
+  autoDetected?: boolean;
 }
 
-export default function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalProps) {
+export default function AddStudentModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  initialCardUid = '',
+  autoDetected = false,
+}: AddStudentModalProps) {
   const [name, setName] = useState('');
   const [studentId, setStudentId] = useState('');
-  const [cardUid, setCardUid] = useState('');
+  const [cardUid, setCardUid] = useState(initialCardUid);
   const [department, setDepartment] = useState('');
   const [initialBalance, setInitialBalance] = useState('100.00');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialCardUid) {
+      setCardUid(initialCardUid);
+    }
+  }, [initialCardUid]);
 
   if (!isOpen) return null;
 
@@ -128,18 +142,28 @@ export default function AddStudentModal({ isOpen, onClose, onSuccess }: AddStude
           </div>
 
           <div>
-            <label className="block text-slate-400 mb-1.5 font-medium">
-              RFID Card UID <span className="text-slate-500 font-light">(Auto-normalized)</span>
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-slate-400 font-medium">RFID Card UID</label>
+              {autoDetected && (
+                <span className="inline-flex items-center space-x-1 text-[10px] text-emerald-400 font-mono bg-emerald-950/60 border border-emerald-800/40 px-2 py-0.5 rounded-full">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                  <span>Auto-Detected from Reader</span>
+                </span>
+              )}
+            </div>
             <div className="relative">
-              <CreditCard className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
+              <CreditCard className={`absolute left-3.5 top-3 h-4 w-4 ${autoDetected ? 'text-emerald-400' : 'text-slate-500'}`} />
               <input
                 type="text"
                 required
                 value={cardUid}
                 onChange={(e) => setCardUid(e.target.value)}
                 placeholder="e.g. 43A1B2C3 or 43:a1:b2:c3"
-                className="w-full bg-[#090c13] border border-[#1b2235] rounded-2xl pl-10 pr-3 py-2.5 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-sky-500 font-mono uppercase text-xs transition-colors"
+                className={`w-full bg-[#090c13] border rounded-2xl pl-10 pr-3 py-2.5 text-slate-100 placeholder-slate-600 focus:outline-none font-mono uppercase text-xs transition-colors ${
+                  autoDetected
+                    ? 'border-emerald-500/50 bg-emerald-950/10 text-emerald-300 focus:border-emerald-400'
+                    : 'border-[#1b2235] focus:border-sky-500'
+                }`}
               />
             </div>
           </div>
