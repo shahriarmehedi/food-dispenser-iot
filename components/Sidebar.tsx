@@ -11,6 +11,7 @@ import {
   LogOut,
   Cpu,
   BookOpen,
+  Code2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -39,6 +40,11 @@ const navItems = [
     name: 'System Manual',
     href: '/manual',
     icon: BookOpen,
+  },
+  {
+    name: 'API Reference',
+    href: '/api-docs',
+    icon: Code2,
   },
 ];
 

@@ -17,6 +17,7 @@ import {
   Sliders,
   Wifi,
   WifiOff,
+  Code2,
 } from 'lucide-react';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -121,11 +122,19 @@ export default function Navbar() {
         <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
           <Link
             href="/manual"
-            className="flex items-center space-x-1.5 sm:space-x-2 text-xs text-sky-400 hover:text-sky-300 bg-[#151b2a] hover:bg-[#1b2235] px-2.5 sm:px-3.5 py-1.5 rounded-full border border-sky-500/30 transition-smooth"
+            className="flex items-center space-x-1.5 sm:space-x-2 text-xs text-sky-400 hover:text-sky-300 bg-[#151b2a] hover:bg-[#1b2235] px-2.5 sm:px-3 py-1.5 rounded-full border border-sky-500/30 transition-smooth"
           >
             <BookOpen className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-            <span className="font-medium hidden sm:inline">System Manual</span>
+            <span className="font-medium hidden sm:inline">Manual</span>
             <span className="font-medium sm:hidden text-[11px]">Manual</span>
+          </Link>
+
+          <Link
+            href="/api-docs"
+            className="hidden sm:flex items-center space-x-1.5 text-xs text-slate-300 hover:text-sky-300 bg-[#151b2a] hover:bg-[#1b2235] px-2.5 sm:px-3 py-1.5 rounded-full border border-[#222a42] hover:border-sky-500/30 transition-smooth"
+          >
+            <Code2 className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+            <span className="font-medium">API Docs</span>
           </Link>
 
           <div className="flex items-center space-x-2 pl-1 sm:pl-2">
@@ -177,6 +186,7 @@ export default function Navbar() {
                 { name: 'Students Directory', href: '/students', icon: Users },
                 { name: 'Audit Ledger', href: '/transactions', icon: Receipt },
                 { name: 'System Manual', href: '/manual', icon: BookOpen },
+                { name: 'API Reference', href: '/api-docs', icon: Code2 },
                 { name: 'System Config', href: '/settings', icon: Sliders },
               ].map((item) => {
                 const Icon = item.icon;
